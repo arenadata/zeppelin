@@ -75,7 +75,7 @@
         <profile>
             <id>hadoop3</id>
             <properties>
-                <hadoop.version>${hadoop3.2.version}</hadoop.version>
+                <hadoop.version>${hadoop3.3.version}</hadoop.version>
             </properties>
 
             <dependencies>
@@ -84,6 +84,12 @@
                     <artifactId>hadoop-client</artifactId>
                     <scope>provided</scope>
                     <version>${hadoop.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.eclipse.jetty.websocket</groupId>
+                            <artifactId>websocket-client</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
@@ -94,6 +100,10 @@
                         <exclusion>
                             <groupId>com.google.code.findbugs</groupId>
                             <artifactId>jsr305</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.eclipse.jetty.websocket</groupId>
+                            <artifactId>websocket-client</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
