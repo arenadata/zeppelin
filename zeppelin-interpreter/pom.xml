@@ -298,7 +298,7 @@
       <id>hadoop3</id>
 
       <properties>
-        <hadoop.version>${hadoop3.2.version}</hadoop.version>
+        <hadoop.version>${hadoop3.3.version}</hadoop.version>
         <hadoop-client-api.artifact>hadoop-client-api</hadoop-client-api.artifact>
         <hadoop-client-runtime.artifact>hadoop-client-runtime</hadoop-client-runtime.artifact>
         <hadoop-client-minicluster.artifact>hadoop-client-minicluster</hadoop-client-minicluster.artifact>
