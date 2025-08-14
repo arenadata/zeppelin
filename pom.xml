@@ -97,7 +97,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- language versions -->
-    <java.version>11</java.version>
+    <java.version>17</java.version>
     <!-- These two lines could be changed like `maven.compiler.release` after updating JDK11 -->
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -188,6 +188,7 @@
 
     <!-- to be able to exclude some tests using command line -->
     <tests.to.exclude/>
+    <extraJavaTestArgs></extraJavaTestArgs>
   </properties>
 
   <dependencyManagement>
@@ -662,7 +663,7 @@
           <configuration combine.children="append">
             <failIfNoTests>false</failIfNoTests>
             <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
-            <argLine>-Xmx2g -Xms1g -Dfile.encoding=UTF-8</argLine>
+            <argLine>-Xmx2g -Xms1g -Dfile.encoding=UTF-8 ${extraJavaTestArgs}</argLine>
             <environmentVariables>
               <IS_ZEPPELIN_TEST>true</IS_ZEPPELIN_TEST>
             </environmentVariables>
@@ -1114,6 +1115,34 @@
       </build>
     </profile>
 
+    <profile>
+      <id>java-17</id>
+      <activation>
+        <jdk>[17,)</jdk>
+      </activation>
+      <properties>
+        <extraJavaTestArgs>
+          -XX:+IgnoreUnrecognizedVMOptions
+          --add-modules=jdk.incubator.vector
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+          --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+          --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+          --add-opens=java.base/java.io=ALL-UNNAMED
+          --add-opens=java.base/java.net=ALL-UNNAMED
+          --add-opens=java.base/java.nio=ALL-UNNAMED
+          --add-opens=java.base/java.util=ALL-UNNAMED
+          --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+          --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+          --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED
+          --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+          --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+          --add-opens=java.base/sun.security.action=ALL-UNNAMED
+          --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+          -Djdk.reflect.useDirectMethodHandle=false
+          -Dio.netty.tryReflectionSetAccessible=true
+        </extraJavaTestArgs>
+      </properties>
+    </profile>
   </profiles>
 
   <reporting>

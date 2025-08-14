@@ -40,7 +40,7 @@
     <wagon.version>2.7</wagon.version>
 
     <!-- spark versions -->
-    <spark.version>3.5.3</spark.version>
+    <spark.version>3.5.4</spark.version>
     <protobuf.version>3.21.12</protobuf.version>
     <py4j.version>0.10.9.7</py4j.version>
     <spark.scala.version>2.12.18</spark.scala.version>
@@ -58,8 +58,6 @@
     <!-- settings -->
     <pyspark.test.exclude>**/PySparkInterpreterMatplotlibTest.java</pyspark.test.exclude>
     <pyspark.test.include>**/*Test.*</pyspark.test.include>
-
-    <extraJavaTestArgs></extraJavaTestArgs>
   </properties>
 
   <dependencies>
@@ -515,40 +513,13 @@
   </build>
 
   <profiles>
-
-    <profile>
-      <id>java-17</id>
-      <activation>
-        <jdk>[17,)</jdk>
-      </activation>
-      <properties>
-        <extraJavaTestArgs>
-          -XX:+IgnoreUnrecognizedVMOptions
-          --add-modules=jdk.incubator.vector
-          --add-opens=java.base/java.lang=ALL-UNNAMED
-          --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
-          --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
-          --add-opens=java.base/java.io=ALL-UNNAMED
-          --add-opens=java.base/java.net=ALL-UNNAMED
-          --add-opens=java.base/java.nio=ALL-UNNAMED
-          --add-opens=java.base/java.util=ALL-UNNAMED
-          --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
-          --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
-          --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED
-          --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
-          --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
-          --add-opens=java.base/sun.security.action=ALL-UNNAMED
-          --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
-          -Djdk.reflect.useDirectMethodHandle=false
-          -Dio.netty.tryReflectionSetAccessible=true
-        </extraJavaTestArgs>
-      </properties>
-    </profile>
-
     <!-- profile spark-scala-x only affect the unit test in spark/interpreter module -->
 
     <profile>
       <id>spark-scala-2.13</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <spark.scala.version>2.13.8</spark.scala.version>
         <spark.scala.binary.version>2.13</spark.scala.binary.version>
@@ -558,7 +529,7 @@
     <profile>
       <id>spark-scala-2.12</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
         <spark.scala.version>2.12.18</spark.scala.version>
@@ -569,7 +540,7 @@
     <profile>
       <id>spark-4.0</id>
       <properties>
-        <spark.version>4.0.0-preview2</spark.version>
+        <spark.version>4.0.0</spark.version>
         <protobuf.version>3.21.12</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
         <libthrift.version>0.16.0</libthrift.version>
@@ -579,8 +550,11 @@
     <!-- profile spark-x only affect spark version used in test -->
     <profile>
       <id>spark-3.5</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
-        <spark.version>3.5.3</spark.version>
+        <spark.version>3.5.4</spark.version>
         <protobuf.version>3.21.12</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
       </properties>
@@ -589,7 +563,7 @@
     <profile>
       <id>spark-3.4</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
         <spark.version>3.4.3</spark.version>
