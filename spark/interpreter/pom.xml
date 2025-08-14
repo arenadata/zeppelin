@@ -40,7 +40,7 @@
     <wagon.version>2.7</wagon.version>
 
     <!-- spark versions -->
-    <spark.version>3.5.3</spark.version>
+    <spark.version>3.5.4</spark.version>
     <protobuf.version>3.21.12</protobuf.version>
     <py4j.version>0.10.9.7</py4j.version>
     <spark.scala.version>2.12.18</spark.scala.version>
@@ -563,7 +563,7 @@
     <profile>
       <id>spark-3.4</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
         <spark.version>3.4.3</spark.version>
