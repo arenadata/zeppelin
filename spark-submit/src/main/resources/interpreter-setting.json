@@ -11,6 +11,13 @@
         "defaultValue": "",
         "description": "Location of spark distribution",
         "type": "string"
+      },
+      "SPARK_SUBMIT": {
+        "envName": "SPARK_SUBMIT",
+        "propertyName": "SPARK_SUBMIT",
+        "defaultValue": "",
+        "description": "Location of spark-submit executable path",
+        "type": "string"
       }
     },
     "editor": {

@@ -172,7 +172,9 @@ if [[ "${INTERPRETER_ID}" == "spark" ]]; then
     kinit -kt "${ZEPPELIN_SERVER_KERBEROS_KEYTAB}" "${ZEPPELIN_SERVER_KERBEROS_PRINCIPAL}"
   fi
   if [[ -n "${SPARK_HOME}" ]]; then
-    export SPARK_SUBMIT="${SPARK_HOME}/bin/spark-submit"
+    if [[ -z ${SPARK_SUBMIT} ]]; then
+      export SPARK_SUBMIT="${SPARK_HOME}/bin/spark-submit"
+    fi
     SPARK_APP_JAR="$(ls "${ZEPPELIN_HOME}"/interpreter/spark/spark-interpreter*.jar)"
     # This will evantually passes SPARK_APP_JAR to classpath of SparkIMain
     ZEPPELIN_INTP_CLASSPATH+=":${SPARK_APP_JAR}"
@@ -264,6 +266,9 @@ if [[ -n "$ZEPPELIN_IMPERSONATE_USER" ]]; then
 fi
 
 if [[ -n "${SPARK_SUBMIT}" ]]; then
+  # JAVA_HOME variable should be set in spark-submit script
+  unset JAVA_HOME
+
   IFS=' ' read -r -a SPARK_SUBMIT_OPTIONS_ARRAY <<< "${SPARK_SUBMIT_OPTIONS}"
   IFS='|' read -r -a ZEPPELIN_SPARK_CONF_ARRAY <<< "${ZEPPELIN_SPARK_CONF}"
   if [[ "${ZEPPELIN_SPARK_YARN_CLUSTER}" == "true"  ]]; then

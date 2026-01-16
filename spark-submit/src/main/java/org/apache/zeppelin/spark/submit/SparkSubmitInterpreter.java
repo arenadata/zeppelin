@@ -63,7 +63,8 @@ public class SparkSubmitInterpreter extends ShellInterpreter {
     if (StringUtils.isBlank(cmd)) {
       return new InterpreterResult(InterpreterResult.Code.SUCCESS);
     }
-    String sparkSubmitCommand = sparkHome + "/bin/spark-submit " + cmd.trim();
+    String sparkSubmitPath =  properties.getProperty("SPARK_SUBMIT", sparkHome + "/bin/spark-submit");
+    String sparkSubmitCommand = sparkSubmitPath + " " + cmd.trim();
     LOGGER.info("Run spark command: {}", sparkSubmitCommand);
     context.out.addInterpreterOutListener(new SparkSubmitOutputListener(context));
     InterpreterResult result = super.internalInterpret(sparkSubmitCommand, context);
