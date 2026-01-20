@@ -164,6 +164,11 @@ if [[ ! -d "${ZEPPELIN_LOG_DIR}" ]]; then
   mkdir -p "${ZEPPELIN_LOG_DIR}"
 fi
 
+if [[ "${INTERPRETER_ID}" == "spark" || "${INTERPRETER_ID}" == "spark-submit" ]]; then
+  # JAVA_HOME variable should be set in spark-submit script
+  unset JAVA_HOME
+fi
+
 # set spark related env variables
 if [[ "${INTERPRETER_ID}" == "spark" ]]; then
 
