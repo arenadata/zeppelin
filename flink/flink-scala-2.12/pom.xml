@@ -34,7 +34,7 @@
   <properties>
     <!--library versions-->
     <flink.version>${flink1.17.version}</flink.version>
-    <flink.scala.version>2.12.7</flink.scala.version>
+    <flink.scala.version>2.12.18</flink.scala.version>
     <flink.scala.binary.version>2.12</flink.scala.binary.version>
     <flink.scala.compile.version>${flink.scala.version}</flink.scala.compile.version>
     <hive.version>2.3.7</hive.version>
@@ -1206,7 +1206,7 @@
       <id>flink-115</id>
       <properties>
         <flink.version>${flink1.15.version}</flink.version>
-        <flink.scala.version>2.12.7</flink.scala.version>
+        <flink.scala.version>2.12.18</flink.scala.version>
         <flink.scala.binary.version>2.12</flink.scala.binary.version>
       </properties>
       <dependencies>
@@ -1235,7 +1235,7 @@
       <id>flink-116</id>
       <properties>
         <flink.version>${flink1.16.version}</flink.version>
-        <flink.scala.version>2.12.7</flink.scala.version>
+        <flink.scala.version>2.12.18</flink.scala.version>
         <flink.scala.binary.version>2.12</flink.scala.binary.version>
       </properties>
       <dependencies>
@@ -1270,7 +1270,7 @@
       <id>flink-117</id>
       <properties>
         <flink.version>${flink1.17.version}</flink.version>
-        <flink.scala.version>2.12.7</flink.scala.version>
+        <flink.scala.version>2.12.18</flink.scala.version>
         <flink.scala.binary.version>2.12</flink.scala.binary.version>
       </properties>
       <dependencies>
