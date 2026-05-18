@@ -173,7 +173,7 @@
     <profile>
       <id>jdbc-phoenix</id>
       <properties>
-        <phoenix.version>4.7.0</phoenix.version>
+        <phoenix.version>5.3.0.1-4.3.0-0</phoenix.version>
       </properties>
       <dependencies>
         <dependency>

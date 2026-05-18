@@ -40,18 +40,19 @@
     <wagon.version>2.7</wagon.version>
 
     <!-- spark versions -->
-    <spark.version>3.5.3</spark.version>
-    <protobuf.version>3.21.12</protobuf.version>
+    <spark.version>3.5.4.4-4.3.0-0</spark.version>
+    <protobuf.version>3.25.9</protobuf.version>
     <py4j.version>0.10.9.7</py4j.version>
     <spark.scala.version>2.12.18</spark.scala.version>
     <spark.scala.binary.version>2.12</spark.scala.binary.version>
 
     <spark.archive>spark-${spark.version}</spark.archive>
+    <spark.bin.archive>${spark.archive}-bin-${hadoop.version}</spark.bin.archive>
     <spark.src.download.url>
-      https://www.apache.org/dyn/closer.lua/spark/${spark.archive}/${spark.archive}.tgz?action=download
+      https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
     </spark.src.download.url>
     <spark.bin.download.url>
-      https://www.apache.org/dyn/closer.lua/spark/${spark.archive}/${spark.archive}-bin-without-hadoop.tgz?action=download
+      https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
     </spark.bin.download.url>
 
     <scala.compile.version>${spark.scala.version}</scala.compile.version>
@@ -120,7 +121,7 @@
       <exclusions>
         <exclusion>
           <groupId>org.apache.spark</groupId>
-          <artifactId>spark-core_2.12</artifactId>
+          <artifactId>spark-core_${spark.scala.binary.version}</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -280,7 +281,7 @@
               <unpack>true</unpack>
               <url>${spark.src.download.url}</url>
               <outputDirectory>${project.build.directory}</outputDirectory>
-              <outputFileName>${spark.archive}.tgz</outputFileName>
+              <outputFileName>${spark.bin.archive}.tgz</outputFileName>
             </configuration>
           </execution>
           <!-- include sparkr by default -->
@@ -296,7 +297,7 @@
               <url>${spark.bin.download.url}</url>
               <unpack>true</unpack>
               <outputDirectory>${project.build.directory}</outputDirectory>
-              <outputFileName>${spark.archive}-bin-without-hadoop.tgz</outputFileName>
+              <outputFileName>${spark.bin.archive}.tgz</outputFileName>
             </configuration>
           </execution>
         </executions>
@@ -315,8 +316,8 @@
             <configuration>
               <target>
                 <delete dir="../../interpreter/spark/pyspark" />
-                <copy file="${project.build.directory}/${spark.archive}/python/lib/py4j-${py4j.version}-src.zip" todir="${project.build.directory}/../../../interpreter/spark/pyspark" />
-                <zip basedir="${project.build.directory}/${spark.archive}/python" destfile="${project.build.directory}/../../../interpreter/spark/pyspark/pyspark.zip" includes="pyspark/" />
+                <copy file="${project.build.directory}/${spark.bin.archive}/python/lib/py4j-${py4j.version}-src.zip" todir="${project.build.directory}/../../../interpreter/spark/pyspark" />
+                <zip basedir="${project.build.directory}/${spark.bin.archive}/python" destfile="${project.build.directory}/../../../interpreter/spark/pyspark/pyspark.zip" includes="pyspark/" />
               </target>
             </configuration>
           </execution>
@@ -337,7 +338,7 @@
               <resources>
                 <resource>
                   <directory>
-                    ${project.build.directory}/spark-${spark.version}-bin-without-hadoop/R/lib
+                    ${project.build.directory}/${spark.bin.archive}/R/lib
                   </directory>
                 </resource>
               </resources>
@@ -550,7 +551,7 @@
     <profile>
       <id>spark-scala-2.13</id>
       <properties>
-        <spark.scala.version>2.13.8</spark.scala.version>
+        <spark.scala.version>2.13.15</spark.scala.version>
         <spark.scala.binary.version>2.13</spark.scala.binary.version>
       </properties>
     </profile>
@@ -570,7 +571,7 @@
       <id>spark-4.0</id>
       <properties>
         <spark.version>4.0.0-preview2</spark.version>
-        <protobuf.version>3.21.12</protobuf.version>
+        <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
         <libthrift.version>0.16.0</libthrift.version>
       </properties>
@@ -580,8 +581,8 @@
     <profile>
       <id>spark-3.5</id>
       <properties>
-        <spark.version>3.5.3</spark.version>
-        <protobuf.version>3.21.12</protobuf.version>
+        <spark.version>3.5.4.4-4.3.0-0</spark.version>
+        <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
       </properties>
     </profile>
@@ -593,7 +594,7 @@
       </activation>
       <properties>
         <spark.version>3.4.3</spark.version>
-        <protobuf.version>3.21.12</protobuf.version>
+        <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
       </properties>
     </profile>

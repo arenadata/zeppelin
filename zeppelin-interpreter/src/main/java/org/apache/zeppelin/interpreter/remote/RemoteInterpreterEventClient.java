@@ -65,14 +65,14 @@ public class RemoteInterpreterEventClient implements ResourcePoolConnector,
 
   public RemoteInterpreterEventClient(String intpEventHost, int intpEventPort, int connectionPoolSize) {
     this.remoteClient = new PooledRemoteClient<>(() -> {
-      TSocket transport = new TSocket(intpEventHost, intpEventPort);
       try {
+        TSocket transport = new TSocket(intpEventHost, intpEventPort);
         transport.open();
+        TProtocol protocol = new TBinaryProtocol(transport);
+        return new RemoteInterpreterEventService.Client(protocol);
       } catch (TTransportException e) {
         throw new IOException(e);
       }
-      TProtocol protocol = new TBinaryProtocol(transport);
-      return new RemoteInterpreterEventService.Client(protocol);
     }, connectionPoolSize);
   }
 

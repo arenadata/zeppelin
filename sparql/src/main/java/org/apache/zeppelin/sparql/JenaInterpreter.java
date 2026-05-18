@@ -92,7 +92,7 @@ public class JenaInterpreter implements SparqlEngine {
         "Error: " + e.getMessage());
     } catch (QueryExceptionHTTP e) {
       LOGGER.error(e.toString());
-      int responseCode = e.getResponseCode();
+      int responseCode = e.getStatusCode();
 
       if (responseCode == HttpStatus.SC_UNAUTHORIZED) {
         return new InterpreterResult(

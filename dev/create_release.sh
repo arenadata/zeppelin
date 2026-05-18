@@ -97,7 +97,7 @@ function make_binary_release() {
 git_clone
 make_source_package
 
-make_binary_release netinst "-Pweb-classic -pl !hbase,!jdbc,!file,!flink,!cassandra,!elasticsearch,!bigquery,!alluxio,!livy,!groovy,!java,!neo4j,!sparql,!mongodb -am"
+make_binary_release netinst "-Pweb-classic -pl !hbase,!jdbc,!file,!flink,!cassandra,!alluxio,!livy,!groovy,!java,!neo4j,!sparql,!mongodb -am"
 
 make_binary_release all "-Pweb-classic"
 

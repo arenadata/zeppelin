@@ -35,8 +35,8 @@
     <properties>
         <interpreter.name>spark</interpreter.name>
 
-        <spark.version>3.5.3</spark.version>
-        <protobuf.version>3.21.12</protobuf.version>
+        <spark.version>3.5.4.4-4.3.0-0</spark.version>
+        <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
         <spark.scala.version>2.12.18</spark.scala.version>
         <spark.scala.binary.version>2.12</spark.scala.binary.version>
@@ -44,19 +44,18 @@
         <scala.compile.version>${spark.scala.version}</scala.compile.version>
 
         <spark.archive>spark-${spark.version}</spark.archive>
+        <spark.bin.archive>${spark.archive}-bin-${hadoop.version}</spark.bin.archive>
         <spark.src.download.url>
-            https://www.apache.org/dyn/closer.lua/spark/${spark.archive}/${spark.archive}.tgz?action=download
+            https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
         </spark.src.download.url>
         <spark.bin.download.url>
-            https://www.apache.org/dyn/closer.lua/spark/${spark.archive}/${spark.archive}-bin-without-hadoop.tgz?action=download
+            https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
         </spark.bin.download.url>
     </properties>
 
     <modules>
         <module>interpreter</module>
         <module>spark-scala-parent</module>
-        <module>scala-2.12</module>
-        <module>scala-2.13</module>
         <module>spark-common</module>
     </modules>
 
@@ -68,4 +67,30 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>spark-scala-2.13</id>
+            <properties>
+                <spark.scala.version>2.13.15</spark.scala.version>
+                <spark.scala.binary.version>2.13</spark.scala.binary.version>
+            </properties>
+            <modules>
+                <module>scala-2.13</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>spark-scala-2.12</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.version>2.12.18</spark.scala.version>
+                <spark.scala.binary.version>2.12</spark.scala.binary.version>
+            </properties>
+            <modules>
+                <module>scala-2.12</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

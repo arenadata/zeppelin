@@ -19,9 +19,7 @@
 
 alluxio         org.apache.zeppelin:zeppelin-alluxio:0.12.0              Alluxio interpreter
 angular         org.apache.zeppelin:zeppelin-angular:0.12.0              HTML and AngularJS view rendering
-bigquery        org.apache.zeppelin:zeppelin-bigquery:0.12.0             BigQuery interpreter
 cassandra       org.apache.zeppelin:zeppelin-cassandra:0.12.0            Cassandra interpreter
-elasticsearch   org.apache.zeppelin:zeppelin-elasticsearch:0.12.0        Elasticsearch interpreter
 file            org.apache.zeppelin:zeppelin-file:0.12.0                 HDFS file interpreter
 flink           org.apache.zeppelin:zeppelin-flink:0.12.0                Flink interpreter
 groovy          org.apache.zeppelin:zeppelin-groovy:0.12.0               Groovy interpreter

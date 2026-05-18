@@ -34,7 +34,7 @@
 
   <properties>
     <!--library versions-->
-    <guava.version>32.0.0-jre</guava.version>
+    <guava.version>33.5.0-jre</guava.version>
     <lucene.version>8.7.0</lucene.version>
     <org.reflections.version>0.9.8</org.reflections.version>
     <xml.apis.version>1.4.01</xml.apis.version>
@@ -89,7 +89,7 @@
 
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
+      <artifactId>bcpkix-jdk18on</artifactId>
     </dependency>
 
     <dependency>

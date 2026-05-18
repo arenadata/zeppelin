@@ -34,11 +34,13 @@
 
     <properties>
         <interpreter.name>r</interpreter.name>
-        <spark.version>3.5.3</spark.version>
+        <spark.version>3.5.4.4-4.3.0-0</spark.version>
+        <spark.scala.binary.version>2.12</spark.scala.binary.version>
 
         <spark.archive>spark-${spark.version}</spark.archive>
+        <spark.bin.archive>${spark.archive}-bin-${hadoop.version}</spark.bin.archive>
         <spark.bin.download.url>
-            https://www.apache.org/dyn/closer.lua/spark/${spark.archive}/${spark.archive}-bin-without-hadoop.tgz?action=download
+            https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
         </spark.bin.download.url>
         <interpreter.jar.name>zeppelin-interpreter-r</interpreter.jar.name>
     </properties>
@@ -103,7 +105,7 @@
 
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
+            <artifactId>spark-core_${spark.scala.binary.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
 
@@ -154,7 +156,7 @@
                             <url>${spark.bin.download.url}</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}</outputDirectory>
-                            <outputFileName>${spark.archive}-bin-without-hadoop.tgz</outputFileName>
+                            <outputFileName>${spark.bin.archive}.tgz</outputFileName>
                         </configuration>
                     </execution>
                 </executions>
@@ -174,7 +176,7 @@
                             <resources>
                                 <resource>
                                     <directory>
-                                        ${project.build.directory}/spark-${spark.version}-bin-without-hadoop/R/lib
+                                        ${project.build.directory}/${spark.bin.archive}/R/lib
                                     </directory>
                                 </resource>
                             </resources>
@@ -243,4 +245,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>spark-scala-2.13</id>
+            <properties>
+                <spark.scala.binary.version>2.13</spark.scala.binary.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-scala-2.12</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <spark.scala.binary.version>2.12</spark.scala.binary.version>
+            </properties>
+        </profile>
+    </profiles>
 </project>

@@ -17,7 +17,6 @@
 
 package org.apache.zeppelin.sparql;
 
-import org.apache.jena.fuseki.Fuseki;
 import org.apache.jena.fuseki.main.FusekiServer;
 import org.apache.jena.fuseki.server.DataAccessPointRegistry;
 import org.apache.jena.query.Dataset;
@@ -28,6 +27,8 @@ import org.apache.jena.rdf.model.ModelFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Properties;
 
 import org.apache.zeppelin.interpreter.InterpreterResult;
@@ -52,7 +53,11 @@ class SparqlJenaEngineTest {
 
   @BeforeAll
   public static void setUp() {
-    port = Fuseki.choosePort();
+    try (ServerSocket s = new ServerSocket(0)) {
+      port = s.getLocalPort();
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to find a free port", e);
+    }
 
     Model model = ModelFactory.createDefaultModel();
     model.read(DATA_FILE);
