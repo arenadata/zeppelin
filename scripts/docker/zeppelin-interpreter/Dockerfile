@@ -20,7 +20,7 @@ FROM ubuntu:22.04
 
 LABEL maintainer="Apache Software Foundation <dev@zeppelin.apache.org>"
 
-ARG version="0.12.0"
+ARG version="0.12.0.1-4.3.0-0"
 
 ENV VERSION="${version}" \
     ZEPPELIN_HOME="/opt/zeppelin"
