@@ -26,6 +26,7 @@ import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterException;
 import org.apache.zeppelin.interpreter.InterpreterResult;
 import org.apache.zeppelin.interpreter.InterpreterResultMessage;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -37,6 +38,7 @@ import java.util.Properties;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+@Ignore("Hive 2.3 embedded metastore is incompatible with Java 17")
 public class FlinkBatchSqlInterpreterTest extends FlinkSqlInterpreterTest {
 
   @Override

@@ -17,29 +17,21 @@
 
 package org.apache.zeppelin.integration;
 
+import org.apache.zeppelin.test.DownloadUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import java.io.IOException;
 
-public class ZeppelinFlinkClusterTest114 extends ZeppelinFlinkClusterTest {
-
-  @Nested
-  @DisplayName("Scala 2.11")
-  public class Scala211 extends ZeppelinFlinkClusterTest {
-
-      @BeforeEach
-      public void downloadFlink() {
-        download("1.14.0", "2.11");
-      }
-  }
+public class SparkIntegrationTest35 {
 
   @Nested
-  @DisplayName("Scala 2.12")
-  public class Scala212 extends ZeppelinFlinkClusterTest {
+  @DisplayName("ADH")
+  public class Adp extends SparkIntegrationTest {
 
-      @BeforeEach
-      public void downloadFlink() {
-        download("1.14.0", "2.12");
-      }
+    @BeforeEach
+    public void downloadSpark() throws IOException {
+      prepareSpark(DownloadUtils.DEFAULT_SPARK_VERSION, DownloadUtils.DEFAULT_SPARK_HADOOP_VERSION);
+    }
   }
 }

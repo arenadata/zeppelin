@@ -28,7 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 
 class DirAccessTest extends AbstractTestRestApi {
@@ -38,6 +40,8 @@ class DirAccessTest extends AbstractTestRestApi {
 
   @Test
   void testDirAccessForbidden() throws Exception {
+    assumeTrue(new File("../zeppelin-web/dist").isDirectory(),
+        "zeppelin-web/dist not built; activate the 'web' profile to run this test");
     try {
       zepServer = new MiniZeppelinServer(DirAccessTest.class.getSimpleName());
       zConf = zepServer.getZeppelinConfiguration();
@@ -57,6 +61,8 @@ class DirAccessTest extends AbstractTestRestApi {
 
   @Test
   void testDirAccessOk() throws Exception {
+    assumeTrue(new File("../zeppelin-web/dist").isDirectory(),
+        "zeppelin-web/dist not built; activate the 'web' profile to run this test");
     try {
       zepServer = new MiniZeppelinServer(DirAccessTest.class.getSimpleName());
       zConf = zepServer.getZeppelinConfiguration();

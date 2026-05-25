@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
@@ -62,16 +61,14 @@ class PodPhaseWatcherTest {
         phase -> StringUtils.equalsAnyIgnoreCase(phase, "Succeeded", "Failed", "Running"));
     try (Watch watch = client.pods().inNamespace("ns1").withName("pod1").watch(podWatcher)) {
       // Update Pod to "pending" phase
-      pod.setStatus(new PodStatus(null, null, null, null, null, null, null, "Pending", null, null,
-              null, null, null));
+      pod.setStatus(new PodStatusBuilder().withPhase("Pending").build());
       pod = client.pods().inNamespace("ns1").replaceStatus(pod);
 
       // Wait a little bit, till update is applied
       await().pollDelay(Duration.ofSeconds(1))
           .until(isPodPhase(pod.getMetadata().getName(), "Pending"));
       // Update Pod to "Running" phase
-      pod.setStatus(new PodStatusBuilder(new PodStatus(null, null, null, null, null, null, null,
-              "Running", null, null, null, null, null)).build());
+      pod.setStatus(new PodStatusBuilder().withPhase("Running").build());
       client.pods().inNamespace("ns1").replaceStatus(pod);
       await().pollDelay(Duration.ofSeconds(1))
           .until(isPodPhase(pod.getMetadata().getName(), "Running"));

@@ -64,6 +64,8 @@ public class IPythonInterpreterTest extends BasePythonInterpreterTest {
 
   protected Properties initIntpProperties() {
     Properties properties = new Properties();
+    properties.setProperty("zeppelin.python",
+        System.getProperty("zeppelin.python", "python"));
     properties.setProperty("zeppelin.python.maxResult", "3");
     properties.setProperty("zeppelin.python.gatewayserver_address", "127.0.0.1");
     return properties;

@@ -65,8 +65,10 @@ public class DownloadUtils {
   private static final int PROGRESS_BAR_UPDATE_INTERVAL;
 
   private static String downloadFolder = System.getProperty("user.home") + "/.cache";
-  public static final String DEFAULT_SPARK_VERSION = "3.4.2";
-  public static final String DEFAULT_SPARK_HADOOP_VERSION = "3";
+  public static final String DEFAULT_SPARK_VERSION =
+      System.getProperty("spark.test.version", "3.5.4.4-4.3.0-0");
+  public static final String DEFAULT_SPARK_HADOOP_VERSION =
+      System.getProperty("spark.test.hadoop.version", "3.4.3.1-4.3.0-0");
 
 
   private DownloadUtils() {
@@ -170,10 +172,19 @@ public class DownloadUtils {
     }
 
     try {
-      URL mirrorURL = new URL(MIRROR_URL +
-          generateSparkDownloadURL(sparkVersion, hadoopVersion, scalaVersion));
-      URL archiveURL = new URL(ARCHIVE_URL +
-          generateSparkDownloadURL(sparkVersion, hadoopVersion, scalaVersion));
+      URL mirrorURL;
+      URL archiveURL;
+      if (isArenadataVersion(sparkVersion)) {
+        URL adpURL = new URL("https://github.com/arenadata/spark/releases/download/v"
+            + sparkVersion + "/spark-" + sparkVersion + "-bin-" + hadoopVersion + ".tgz");
+        mirrorURL = adpURL;
+        archiveURL = adpURL;
+      } else {
+        mirrorURL = new URL(MIRROR_URL +
+            generateSparkDownloadURL(sparkVersion, hadoopVersion, scalaVersion));
+        archiveURL = new URL(ARCHIVE_URL +
+            generateSparkDownloadURL(sparkVersion, hadoopVersion, scalaVersion));
+      }
       LOGGER.info("Download {}", sparkVersionLog);
       download(new DownloadRequest(mirrorURL, archiveURL), sparkTarGZ);
       ProgressBarBuilder pbb = new ProgressBarBuilder()
@@ -278,8 +289,20 @@ public class DownloadUtils {
     }
 
     try {
-      URL mirrorURL = new URL(MIRROR_URL + generateLivyDownloadUrl(livyVersion, scalaVersion));
-      URL archiveURL = new URL(ARCHIVE_URL + generateLivyDownloadUrl(livyVersion, scalaVersion));
+      URL mirrorURL;
+      URL archiveURL;
+      if (isArenadataVersion(livyVersion)) {
+        String adpFileName = StringUtils.isBlank(scalaVersion)
+            ? "apache-livy-" + livyVersion + "-bin.zip"
+            : "apache-livy-" + livyVersion + "_" + scalaVersion + "-bin.zip";
+        URL adpURL = new URL("https://github.com/arenadata/livy/releases/download/v"
+            + livyVersion + "/" + adpFileName);
+        mirrorURL = adpURL;
+        archiveURL = adpURL;
+      } else {
+        mirrorURL = new URL(MIRROR_URL + generateLivyDownloadUrl(livyVersion, scalaVersion));
+        archiveURL = new URL(ARCHIVE_URL + generateLivyDownloadUrl(livyVersion, scalaVersion));
+      }
       LOGGER.info("Download {}", livyLog);
       download(new DownloadRequest(mirrorURL, archiveURL), livyZip);
       LOGGER.info("Unzip {} to {}", livyLog, targetLivyHomeFolder);
@@ -565,10 +588,19 @@ public class DownloadUtils {
     }
     File hadoopTGZ = new File(hadoopDownloadFolder, "hadoop-" + version + ".tar.gz");
     try {
-      URL mirrorURL = new URL(MIRROR_URL + generateDownloadURL(
-          "hadoop", version, ".tar.gz", "hadoop/core"));
-      URL archiveURL = new URL(ARCHIVE_URL + generateDownloadURL(
-          "hadoop", version, ".tar.gz", "hadoop/core"));
+      URL mirrorURL;
+      URL archiveURL;
+      if (isArenadataVersion(version)) {
+        URL adpURL = new URL("https://github.com/arenadata/hadoop/releases/download/v"
+            + version + "/hadoop-" + version + ".tar.gz");
+        mirrorURL = adpURL;
+        archiveURL = adpURL;
+      } else {
+        mirrorURL = new URL(MIRROR_URL + generateDownloadURL(
+            "hadoop", version, ".tar.gz", "hadoop/core"));
+        archiveURL = new URL(ARCHIVE_URL + generateDownloadURL(
+            "hadoop", version, ".tar.gz", "hadoop/core"));
+      }
       LOGGER.info("Download Hadoop {}", version);
       download(new DownloadRequest(mirrorURL, archiveURL), hadoopTGZ);
       ProgressBarBuilder pbb = new ProgressBarBuilder()
@@ -597,6 +629,10 @@ public class DownloadUtils {
       String projectPath) {
     return projectPath + "/" + project + "-" + version + "/" + project + "-" + version
         + postFix;
+  }
+
+  private static boolean isArenadataVersion(String version) {
+    return version != null && version.matches(".*-\\d+\\.\\d+\\.\\d+-\\d+$");
   }
 
   private static String generateSparkDownloadURL(String sparkVersion, String hadoopVersion,

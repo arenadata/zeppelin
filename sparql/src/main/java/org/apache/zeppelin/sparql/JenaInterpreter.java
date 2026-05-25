@@ -111,6 +111,11 @@ public class JenaInterpreter implements SparqlEngine {
       return new InterpreterResult(
         InterpreterResult.Code.INCOMPLETE,
           "Query cancelled.");
+    } catch (RuntimeException e) {
+      LOGGER.error(e.toString());
+      return new InterpreterResult(
+        InterpreterResult.Code.ERROR,
+          "Error: " + e.getMessage());
     }
   }
 

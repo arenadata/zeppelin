@@ -76,7 +76,7 @@ abstract class PythonInterpreterPandasSqlTest {
   @BeforeEach
   public void setUp() throws InterpreterException {
     Properties p = new Properties();
-    p.setProperty("zeppelin.python", "python");
+    p.setProperty("zeppelin.python", System.getProperty("zeppelin.python", "python"));
     p.setProperty("zeppelin.python.maxResult", "100");
     p.setProperty("zeppelin.python.useIPython", useIPython + "");
     p.setProperty("zeppelin.python.gatewayserver_address", "127.0.0.1");

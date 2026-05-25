@@ -71,7 +71,9 @@ public class IPyFlinkInterpreterTest extends IPythonInterpreterTest {
   @Override
   protected Properties initIntpProperties() {
     Properties p = new Properties();
-    p.setProperty("zeppelin.pyflink.python", "python");
+    p.setProperty("zeppelin.pyflink.python",
+        System.getProperty("zeppelin.pyflink.python",
+            System.getProperty("zeppelin.python", "python")));
     p.setProperty("zeppelin.flink.maxResult", "3");
     p.setProperty("zeppelin.flink.test", "true");
     p.setProperty("zeppelin.dep.localrepo", Files.createTempDir().getAbsolutePath());

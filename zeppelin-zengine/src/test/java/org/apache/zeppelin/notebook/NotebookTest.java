@@ -115,7 +115,10 @@ class NotebookTest extends AbstractInterpreterTest implements ParagraphJobListen
     notebook.initNotebook();
     notebook.waitForFinishInit(1, TimeUnit.MINUTES);
 
-    // create empty shiro.ini file under confDir
+    // create empty shiro.ini file under confDir (idempotent: a prior
+    // test's tearDown may have failed to clean confDir if
+    // interpreterSettingManager.close() threw, leaving shiro.ini behind)
+    Files.deleteIfExists(new File(confDir, "shiro.ini").toPath());
     Files.createFile(new File(confDir, "shiro.ini").toPath());
   }
 

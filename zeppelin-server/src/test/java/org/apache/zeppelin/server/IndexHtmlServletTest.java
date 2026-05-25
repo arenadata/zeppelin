@@ -17,11 +17,13 @@
 package org.apache.zeppelin.server;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -46,6 +48,8 @@ class IndexHtmlServletTest {
 
     @Test
     void testZeppelinWebHtmlAddon() throws IOException, ServletException {
+      assumeTrue(new File(FILE_PATH_INDEX_HTML_ZEPPELIN_WEB).isFile(),
+          "zeppelin-web/dist/index.html not built; activate the 'web' profile to run this test");
       ZeppelinConfiguration zConf = mock(ZeppelinConfiguration.class);
       when(zConf.getHtmlBodyAddon()).thenReturn(TEST_BODY_ADDON);
       when(zConf.getHtmlHeadAddon()).thenReturn(TEST_HEAD_ADDON);

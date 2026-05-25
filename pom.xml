@@ -715,7 +715,8 @@
               --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
               --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
               --add-opens=java.base/sun.security.action=ALL-UNNAMED
-              --add-opens=java.base/sun.util.calendar=ALL-UNNAMED</argLine>
+              --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+              --add-opens=java.management/sun.management=ALL-UNNAMED</argLine>
             <environmentVariables>
               <IS_ZEPPELIN_TEST>true</IS_ZEPPELIN_TEST>
             </environmentVariables>

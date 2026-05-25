@@ -30,8 +30,8 @@ import org.apache.zeppelin.interpreter.remote.RemoteInterpreterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 
 /**
  * Interpreter Launcher which use shell script to launch the interpreter process.
@@ -43,7 +43,7 @@ public class K8sStandardInterpreterLauncher extends InterpreterLauncher {
 
   public K8sStandardInterpreterLauncher(ZeppelinConfiguration zConf, RecoveryStorage recoveryStorage) {
     super(zConf, recoveryStorage);
-    client = new DefaultKubernetesClient();
+    client = new KubernetesClientBuilder().build();
   }
 
 

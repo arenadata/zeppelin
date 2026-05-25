@@ -40,7 +40,7 @@ import org.apache.zeppelin.interpreter.remote.RemoteInterpreterManagedProcess;
 import org.junit.jupiter.api.Test;
 
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 
@@ -582,17 +582,13 @@ class K8sRemoteInterpreterProcessTest {
       await().until(() -> client.pods().inNamespace(namespace).withName(podName).get() != null);
       // Pod is present set first phase
       Pod pod = client.pods().inNamespace(namespace).withName(podName).get();
-      pod.setStatus(new PodStatus(null, null, null, null, null, null, null, firstPhase,
-          null,
-          null, null, null, null));
+      pod.setStatus(new PodStatusBuilder().withPhase(firstPhase).build());
       client.pods().inNamespace(namespace).replaceStatus(pod);
       await().pollDelay(Duration.ofMillis(200)).until(() -> firstPhase.equals(
           client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPhase()));
       // Set second Phase
       pod = client.pods().inNamespace(namespace).withName(podName).get();
-      pod.setStatus(new PodStatus(null, null, null, null, null, null, null, secondPhase,
-          null,
-          null, null, null, null));
+      pod.setStatus(new PodStatusBuilder().withPhase(secondPhase).build());
       client.pods().inNamespace(namespace).replaceStatus(pod);
       await().pollDelay(Duration.ofMillis(200)).until(() -> secondPhase.equals(
           client.pods().inNamespace(namespace).withName(podName).get().getStatus().getPhase()));

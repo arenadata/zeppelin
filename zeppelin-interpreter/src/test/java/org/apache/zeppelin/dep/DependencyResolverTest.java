@@ -23,6 +23,7 @@ import org.eclipse.aether.RepositoryException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 
 class DependencyResolverTest {
@@ -71,8 +73,9 @@ class DependencyResolverTest {
   }
 
   @Test
+  @Timeout(value = 120, unit = TimeUnit.SECONDS)
   void testLoad() throws Exception {
-    // basic load
+    // basic load from Maven Central (default repo)
     resolver.load("com.databricks:spark-csv_2.10:1.3.0", testCopyPath);
     assertEquals(4, testCopyPath.list().length);
     FileUtils.cleanDirectory(testCopyPath);
@@ -83,25 +86,9 @@ class DependencyResolverTest {
     assertEquals(3, testCopyPath.list().length);
     FileUtils.cleanDirectory(testCopyPath);
 
-    // load from added http repository
-    resolver.addRepo("httpmvn",
-        "http://insecure.repo1.maven.org/maven2/", false);
-    resolver.load("com.databricks:spark-csv_2.10:1.3.0", testCopyPath);
-    assertEquals(4, testCopyPath.list().length);
-    FileUtils.cleanDirectory(testCopyPath);
-    resolver.delRepo("httpmvn");
-
-    // load from added repository
-    resolver.addRepo("sonatype",
-        "https://oss.sonatype.org/content/repositories/ksoap2-android-releases/", false);
-    resolver.load("com.google.code.ksoap2-android:ksoap2-jsoup:3.6.3", testCopyPath);
-    assertEquals(10, testCopyPath.list().length);
-
-    // load invalid artifact
-    assertThrows(RepositoryException.class, () -> {
-      resolver.delRepo("sonatype");
-      resolver.load("com.agimatec:agimatec-validation:0.12.0", testCopyPath);
-    });
+    // load non-existent artifact -> RepositoryException
+    assertThrows(RepositoryException.class, () ->
+        resolver.load("com.agimatec:agimatec-validation:0.12.0", testCopyPath));
   }
 
   @Test

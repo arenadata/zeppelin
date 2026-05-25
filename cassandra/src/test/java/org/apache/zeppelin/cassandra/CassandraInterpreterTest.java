@@ -65,6 +65,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Disabled("Cassandra 3.11 embedded server is incompatible with Java 17")
 public class CassandraInterpreterTest { // extends AbstractCassandraUnit4CQLTestCase {
   private static final String ARTISTS_TABLE = "zeppelin.artists";
 

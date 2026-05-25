@@ -33,8 +33,8 @@ public class ProxyRowIterator implements Iterator<Row> {
 
   @Override
   public boolean hasNext() {
-    rows.invokeMethod("hasNext");
-    return false;
+    Object ret = rows.invokeMethod("hasNext");
+    return ret != null && (Boolean) ret;
   }
 
   @Override

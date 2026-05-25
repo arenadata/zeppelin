@@ -29,6 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.zeppelin.interpreter.InterpreterResult;
@@ -127,7 +130,7 @@ class SparqlJenaEngineTest {
         "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>" +
         "\t<http://xmlns.com/foaf/0.1/Person>\n<http://example.org/#green-goblin>\t" +
         "<http://www.perceive.net/schemas/relationship/enemyOf>\t<http://example.org/#spiderman>\n";
-    assertEquals(expected, result.message().get(0).getData());
+    assertEquals(normalizeTsv(expected), normalizeTsv(result.message().get(0).getData()));
   }
 
   @Test
@@ -160,7 +163,17 @@ class SparqlJenaEngineTest {
         "\t<foaf:Person>\n<http://example.org/#green-goblin>\t" +
         "<rel:enemyOf>\t<http://example.org/#spiderman>\n";
 
-    assertEquals(expected, result.message().get(0).getData());
+    assertEquals(normalizeTsv(expected), normalizeTsv(result.message().get(0).getData()));
+  }
+
+  private static String normalizeTsv(String tsv) {
+    String[] lines = tsv.split("\n", -1);
+    if (lines.length <= 1) {
+      return tsv;
+    }
+    List<String> body = new java.util.ArrayList<>(Arrays.asList(lines).subList(1, lines.length));
+    Collections.sort(body);
+    return lines[0] + "\n" + String.join("\n", body);
   }
 
   @Test

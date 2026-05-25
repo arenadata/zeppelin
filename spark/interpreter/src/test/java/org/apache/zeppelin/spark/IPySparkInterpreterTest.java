@@ -60,7 +60,9 @@ public class IPySparkInterpreterTest extends IPythonInterpreterTest {
     p.setProperty("zeppelin.spark.useHiveContext", "false");
     p.setProperty("zeppelin.spark.maxResult", "3");
     p.setProperty("zeppelin.spark.importImplicit", "true");
-    p.setProperty("zeppelin.pyspark.python", "python");
+    p.setProperty("spark.pyspark.python",
+        System.getProperty("spark.pyspark.python",
+            System.getProperty("zeppelin.python", "python")));
     try {
       p.setProperty("zeppelin.dep.localrepo", Files.createTempDirectory("localrepo").toAbsolutePath().toString());
     } catch (IOException e) {

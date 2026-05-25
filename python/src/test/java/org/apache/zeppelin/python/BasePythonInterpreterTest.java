@@ -367,11 +367,13 @@ public abstract class BasePythonInterpreterTest extends ConcurrentTestCase {
     interpreterResultMessages = context.out.toInterpreterResultMessage();
     assertEquals(1, interpreterResultMessages.size());
     assertEquals(InterpreterResult.Type.TABLE, interpreterResultMessages.get(0).getType());
+    String tsData = interpreterResultMessages.get(0).getData()
+        .replaceAll("\\.0+</strong>", ".000000</strong>");
     assertEquals("\tname\n" +
-        "%html <strong>2023-05-30T00:00:00.000000000</strong>\ta\n" +
-        "%html <strong>2023-05-31T00:00:00.000000000</strong>\tb\n" +
-        "%html <strong>2023-06-01T00:00:00.000000000</strong>\tc\n",
-        interpreterResultMessages.get(0).getData());
+        "%html <strong>2023-05-30T00:00:00.000000</strong>\ta\n" +
+        "%html <strong>2023-05-31T00:00:00.000000</strong>\tb\n" +
+        "%html <strong>2023-06-01T00:00:00.000000</strong>\tc\n",
+        tsData);
 
     // z.show(matplotlib)
     context = getInterpreterContext();

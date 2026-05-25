@@ -52,7 +52,9 @@ class PyFlinkInterpreterTest extends PythonInterpreterTest {
   @BeforeEach
   public void setUp() throws InterpreterException {
     Properties properties = new Properties();
-    properties.setProperty("zeppelin.pyflink.python", "python");
+    properties.setProperty("zeppelin.pyflink.python",
+        System.getProperty("zeppelin.pyflink.python",
+            System.getProperty("zeppelin.python", "python")));
     properties.setProperty("zeppelin.flink.maxResult", "3");
     properties.setProperty("zeppelin.dep.localrepo", Files.createTempDir().getAbsolutePath());
     properties.setProperty("zeppelin.pyflink.useIPython", "false");

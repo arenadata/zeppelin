@@ -394,6 +394,10 @@ public abstract class SparkIntegrationTest {
   }
 
   private String getPythonExec() throws IOException, InterruptedException {
+    String override = System.getProperty("zeppelin.python");
+    if (override != null && !override.isEmpty()) {
+      return override;
+    }
     Process process = Runtime.getRuntime().exec(new String[]{"which", "python"});
     if (process.waitFor() != 0) {
       throw new RuntimeException("Fail to run command: which python.");

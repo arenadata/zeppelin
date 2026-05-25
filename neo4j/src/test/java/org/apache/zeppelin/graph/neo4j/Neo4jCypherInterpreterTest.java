@@ -29,6 +29,7 @@ import org.apache.zeppelin.tabledata.Node;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+@Disabled("testcontainers 1.19 pins Docker API v1.32 which Docker 29+ rejects (needs >=1.40)")
 @Testcontainers
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class Neo4jCypherInterpreterTest {

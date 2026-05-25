@@ -69,9 +69,9 @@ public class IRInterpreterTest extends IRKernelTest {
     assertEquals(InterpreterResult.Type.TABLE, resultMessages.get(0).getType(),
       resultMessages.toString());
     assertEquals("country\tval1\tval2\n" +
-                    "3\t10\t23\n" +
-                    "2\t13\t12\n" +
-                    "1\t14\t32\n",
+                    "US\t10\t23\n" +
+                    "GB\t13\t12\n" +
+                    "BR\t14\t32\n",
             resultMessages.get(0).getData());
 
     context = getInterpreterContext();
@@ -81,7 +81,7 @@ public class IRInterpreterTest extends IRKernelTest {
     assertEquals(2, resultMessages.size());
     assertEquals(InterpreterResult.Type.TABLE, resultMessages.get(0).getType(), resultMessages.toString());
     assertEquals("country\tval1\tval2\n" +
-                    "3\t10\t23\n",
+                    "US\t10\t23\n",
             resultMessages.get(0).getData());
     assertEquals(InterpreterResult.Type.HTML, resultMessages.get(1).getType(),
       resultMessages.toString());
