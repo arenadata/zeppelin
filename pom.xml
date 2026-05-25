@@ -108,6 +108,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <extraJavaTestArgs></extraJavaTestArgs>
 
     <!-- language versions -->
     <java.version>11</java.version>
@@ -159,7 +160,7 @@
     <micrometer.version>1.6.0</micrometer.version>
     <findbugs.jsr305.version>3.0.2</findbugs.jsr305.version>
 
-    <hadoop.version>3.4.3.1-4.3.0-0</hadoop.version>
+    <hadoop.version>3.4.3.1-4.3.0-1</hadoop.version>
     <hadoop.deps.scope>provided</hadoop.deps.scope>
 
     <quartz.scheduler.version>2.3.2</quartz.scheduler.version>
@@ -845,6 +846,32 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>java-17</id>
+      <activation>
+        <jdk>[17,)</jdk>
+      </activation>
+      <properties>
+        <extraJavaTestArgs>
+          -XX:+IgnoreUnrecognizedVMOptions
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+          --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+          --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+          --add-opens=java.base/java.io=ALL-UNNAMED
+          --add-opens=java.base/java.net=ALL-UNNAMED
+          --add-opens=java.base/java.nio=ALL-UNNAMED
+          --add-opens=java.base/java.util=ALL-UNNAMED
+          --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+          --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+          --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED
+          --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+          --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+          --add-opens=java.base/sun.security.action=ALL-UNNAMED
+          --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+        </extraJavaTestArgs>
+      </properties>
+    </profile>
+
     <profile>
       <id>web-classic</id>
       <modules>

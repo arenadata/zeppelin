@@ -208,6 +208,9 @@ public class LuceneSearch extends SearchService {
    */
   @Override
   public void updateNoteIndex(String noteId) {
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     updateIndexNoteName(noteId);
   }
 
@@ -233,6 +236,9 @@ public class LuceneSearch extends SearchService {
 
   @Override
   public void updateParagraphIndex(String noteId, String paragraphId) {
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     try {
       notebook.processNote(noteId,
         note -> {
@@ -325,6 +331,9 @@ public class LuceneSearch extends SearchService {
    */
   @Override
   public void addNoteIndex(String noteId) {
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     try {
       notebook.processNote(noteId,
         note -> {
@@ -341,6 +350,9 @@ public class LuceneSearch extends SearchService {
 
   @Override
   public void addParagraphIndex(String noteId, String paragraphId) {
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     try {
       notebook.processNote(noteId,
         note -> {
@@ -373,6 +385,9 @@ public class LuceneSearch extends SearchService {
    */
   @Override
   public void deleteNoteIndex(String noteId) {
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     try {
       deleteDoc(noteId, null);
       deleteParagraphIndex(noteId, null);
@@ -388,6 +403,9 @@ public class LuceneSearch extends SearchService {
    */
   @Override
   public void deleteParagraphIndex(String noteId, String paragraphId){
+    if (!indexWriter.isOpen()) {
+      return;
+    }
     try {
       deleteDoc(noteId, paragraphId);
     } catch (IOException e) {

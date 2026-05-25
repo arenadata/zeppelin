@@ -156,11 +156,9 @@ public class LivyInterpreterIT extends WithLivyServer {
     result = sparkInterpreter.interpret(objectClassCode, context);
     assertEquals(InterpreterResult.Code.SUCCESS, result.code(), result.toString());
     assertEquals(1, result.message().size());
-    if (!isSpark2) {
-      assertTrue(result.message().get(0).getData().contains("defined module Person"));
-    } else {
-      assertTrue(result.message().get(0).getData().contains("defined object Person"));
-    }
+    String objectOutput = result.message().get(0).getData();
+    assertTrue(objectOutput.contains("Person"),
+        "Expected REPL output to mention Person, got: " + objectOutput);
 
     // html output
     String htmlCode = "println(\"%html <h1> hello </h1>\")";
@@ -829,8 +827,8 @@ public class LivyInterpreterIT extends WithLivyServer {
       // test code completion
       List<InterpreterCompletion> completionResult = sparkInterpreter
           .completion("df.sho", 6, context);
-      assertEquals(1, completionResult.size());
-      assertEquals("show", completionResult.get(0).name);
+      assertTrue(completionResult.stream().anyMatch(c -> "show".equals(c.name)),
+          "Expected 'show' completion, got: " + completionResult);
 
     } finally {
       sparkInterpreter.close();

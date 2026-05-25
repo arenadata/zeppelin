@@ -1,0 +1,664 @@
+name: CI
+
+on:
+  push:
+    branches: ['develop/**', 'release/**']
+  pull_request:
+    branches: ['develop/**', 'release/**']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_ARGS: -B -V -e -ntp
+  MAVEN_OPTS: -Xmx4g -XX:ReservedCodeCacheSize=1g -XX:MaxMetaspaceSize=2g
+  ZEPPELIN_HELIUM_REGISTRY: helium
+  SPARK_PRINT_LAUNCH_COMMAND: "true"
+  SPARK_LOCAL_IP: 127.0.0.1
+  ZEPPELIN_LOCAL_IP: 127.0.0.1
+  PYSPARK_PYTHON: python
+  PYSPARK_DRIVER_PYTHON: python
+  ZEPPELIN_INTP_JAVA_OPTS: >-
+    -XX:+IgnoreUnrecognizedVMOptions
+    --add-opens=java.base/java.lang=ALL-UNNAMED
+    --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+    --add-opens=java.base/java.lang.reflect=ALL-UNNAMED
+    --add-opens=java.base/java.io=ALL-UNNAMED
+    --add-opens=java.base/java.net=ALL-UNNAMED
+    --add-opens=java.base/java.nio=ALL-UNNAMED
+    --add-opens=java.base/java.util=ALL-UNNAMED
+    --add-opens=java.base/java.util.concurrent=ALL-UNNAMED
+    --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
+    --add-opens=java.base/jdk.internal.ref=ALL-UNNAMED
+    --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+    --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+    --add-opens=java.base/sun.security.action=ALL-UNNAMED
+    --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+    --add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  license-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - name: Check Rat
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw apache-rat:check -Prat ${MAVEN_ARGS}
+
+  maven-validate:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - name: Run Maven Validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw validate -Pinclude-hadoop ${MAVEN_ARGS}
+
+  default-build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: build without any profiles
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw clean verify -DskipTests ${MAVEN_ARGS}
+
+  core-modules:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+            ~/conda_pkgs_dir
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install application with some interpreter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw install -Pbuild-distr -DskipTests -pl zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.13,markdown,angular,shell -am -Pweb-classic -Phelium-dev -Pexamples ${MAVEN_ARGS}
+      - name: install and test plugins
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw package -pl zeppelin-plugins -amd ${MAVEN_ARGS}
+      - name: Setup conda environment with python 3.10 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_3.10_with_R.yml
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: |
+          R -e "IRkernel::installspec()"
+          conda list
+          conda info
+      - name: run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw verify -Pusing-packaged-distr -pl zeppelin-server,zeppelin-web,spark-submit,spark/scala-2.13,markdown,angular,shell -am -Pweb-classic -Phelium-dev -Pexamples -Dtests.to.exclude=**/org/apache/zeppelin/spark/* -DfailIfNoTests=false -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-core-modules
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  interpreter-test-non-core:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    env:
+      INTERPRETERS: 'hbase,jdbc,file,flink-cmd,cassandra,alluxio,livy,groovy,java,neo4j,sparql,mongodb,influxdb,shell'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw install -DskipTests -am -pl ${INTERPRETERS} ${MAVEN_ARGS}
+      - name: Setup conda environment with python 3.10 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R_and_tensorflow
+          environment-file: testing/env_python_3_with_R_and_tensorflow.yml
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: verify interpreter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw verify -am -pl ${INTERPRETERS} -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-interpreter-non-core
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  interpreter-test-jupyter-python-rlang:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ "3.10" ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: Setup conda environment with python ${{ matrix.python }} and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_${{ matrix.python }}_with_R.yml
+          python-version: ${{ matrix.python }}
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: R -e "IRkernel::installspec()"
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw install -DskipTests -pl python,rlang,zeppelin-jupyter-interpreter -am ${MAVEN_ARGS}
+      - name: run tests with ${{ matrix.python }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw test -pl python,rlang,zeppelin-jupyter-interpreter -DfailIfNoTests=false -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-jupyter-python-rlang-py${{ matrix.python }}
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  zeppelin-integration-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Start mysql
+        run: sudo systemctl start mysql.service
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: |
+          ./mvnw install -DskipTests -Pintegration -pl zeppelin-interpreter-integration,zeppelin-web,spark-submit,spark/scala-2.13,markdown,flink-cmd,flink/flink-scala-2.12,jdbc,shell,rlang -am -Pweb-classic -Pflink-117 ${MAVEN_ARGS}
+          ./mvnw package -pl zeppelin-plugins -amd -DskipTests ${MAVEN_ARGS}
+      - name: Setup conda environment with python 3.10 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_3_with_R.yml
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: R -e "IRkernel::installspec()"
+      - name: run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -DfailIfNoTests=false -Dtest=ZeppelinClientIntegrationTest,ZeppelinClientWithAuthIntegrationTest,ShellIntegrationTest,JdbcIntegrationTest -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Print zeppelin logs
+        if: always()
+        run: if [ -d "logs" ]; then cat logs/*; fi
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-zeppelin-integration
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  flink-test-and-flink-integration-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ "3.10" ]
+        flink: [ 117 ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment for flink
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: |
+          ./mvnw install -DskipTests -am -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -Pintegration ${MAVEN_ARGS}
+          ./mvnw clean package -pl zeppelin-plugins -amd -DskipTests ${MAVEN_ARGS}
+      - name: Setup conda environment with python ${{ matrix.python }} and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_flink
+          environment-file: testing/env_python_3_with_flink_${{ matrix.flink }}.yml
+          python-version: ${{ matrix.python }}
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: run tests for flink
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw verify -pl flink/flink-scala-2.12,flink-cmd,zeppelin-interpreter-integration -Pflink-${{ matrix.flink }} -am -Pintegration -DfailIfNoTests=false -Dtest=org.apache.zeppelin.flink.*Test -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Print zeppelin logs
+        if: always()
+        run: if [ -d "logs" ]; then cat logs/*; fi
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-flink-${{ matrix.flink }}-py${{ matrix.python }}
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  spark-integration-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: |
+          ./mvnw install -DskipTests -pl zeppelin-interpreter-integration,zeppelin-web,spark-submit,spark/scala-2.13,markdown,rlang -am -Pweb-classic -Pintegration ${MAVEN_ARGS}
+          ./mvnw clean package -pl zeppelin-plugins -amd -DskipTests ${MAVEN_ARGS}
+      - name: Setup conda environment with python 3.10 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_3_with_R.yml
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: R -e "IRkernel::installspec()"
+      - name: run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw test -pl zeppelin-interpreter-integration -Pintegration -Dtest=SparkSubmitIntegrationTest,ZeppelinSparkClusterTest35,SparkIntegrationTest35 -DfailIfNoTests=false -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-spark-integration
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  spark-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ "3.10" ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw install -DskipTests -pl spark-submit,spark/scala-2.13,rlang -am ${MAVEN_ARGS}
+      - name: Setup conda environment with python ${{ matrix.python }} and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_3_with_R
+          environment-file: testing/env_python_${{ matrix.python }}_with_R.yml
+          python-version: ${{ matrix.python }}
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: R -e "IRkernel::installspec()"
+      - name: run spark-3.5 tests with scala-2.13 and python-${{ matrix.python }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: |
+          rm -rf spark/interpreter/metastore_db
+          ./mvnw verify -pl spark-submit,spark/interpreter -am -Dtest=org/apache/zeppelin/spark/* -Pspark-3.5 -Pspark-scala-2.13 -Pintegration -DfailIfNoTests=false -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-spark-test-py${{ matrix.python }}
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  livy-0-9-with-spark-3-5:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: install environment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw install -DskipTests -pl livy -am ${MAVEN_ARGS}
+      - name: Download Arenadata Spark 3.5.4.4-4.3.0-1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v3.5.4.4-4.3.0-1 -R arenadata/spark -p 'spark-*-bin-*.tgz'
+          tar zxf spark-3.5.4.4-4.3.0-1-bin-3.4.3.1-4.3.0-1.tgz
+      - name: Download Arenadata Livy 0.9.0.1-4.3.0-0 (scala 2.13)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download v0.9.0.1-4.3.0-0 -R arenadata/livy -p 'apache-livy-*_2.13-bin.zip'
+          unzip -q apache-livy-0.9.0.1-4.3.0-0_2.13-bin.zip
+      - name: Setup conda environment with python 3.10 and R
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: python_39_with_R
+          environment-file: testing/env_python_3.10_with_R.yml
+          python-version: "3.10"
+          channels: conda-forge
+          channel-priority: true
+          auto-activate-base: false
+          use-mamba: true
+      - name: Make IRkernel available to Jupyter
+        run: R -e "IRkernel::installspec()"
+      - name: run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: |
+          export SPARK_HOME=$PWD/spark-3.5.4.4-4.3.0-1-bin-3.4.3.1-4.3.0-1
+          export LIVY_HOME=$PWD/apache-livy-0.9.0.1-4.3.0-0_2.13-bin
+          ./mvnw verify -pl livy -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-livy
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  run-e2e-tests-in-zeppelin-web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: Install application
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: ./mvnw clean install -DskipTests -am -pl zeppelin-web -Pweb-classic -Pspark-scala-2.13 -Pspark-3.5 -Pweb-dist ${MAVEN_ARGS}
+      - name: Run headless test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw verify -pl zeppelin-web -Pweb-classic -Pspark-scala-2.13 -Pspark-3.5 -Pweb-dist -Pweb-e2e -Dsurefire.rerunFailingTestsCount=2 ${MAVEN_ARGS}
+      - name: Print zeppelin logs
+        if: always()
+        run: if [ -d "logs" ]; then cat logs/*; fi
+      - name: Upload surefire reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-web-e2e
+          path: '**/target/surefire-reports/'
+          if-no-files-found: ignore
+
+  run-tests-in-zeppelin-web-angular:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tune Runner VM
+        uses: ./.github/actions/tune-runner-vm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          server-id: arenadata
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/apache/zeppelin/
+            ~/.spark-dist
+            ~/.cache
+          key: ${{ runner.os }}-zeppelin-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-zeppelin-
+      - name: Run headless test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USERNAME: ${{ github.actor }}
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" ./mvnw package -pl zeppelin-web-angular ${MAVEN_ARGS}
+

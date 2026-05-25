@@ -83,6 +83,11 @@ public class MiniZeppelinServer implements AutoCloseable {
     confDir = new File(zeppelinHome, "conf");
     confDir.mkdirs();
     LOGGER.info("ZEPPELIN_CONF_DIR: " + confDir.getAbsolutePath());
+    Files.writeString(new File(confDir, "log4j_yarn_cluster.properties").toPath(),
+        "log4j.rootLogger=INFO, stdout\n"
+            + "log4j.appender.stdout=org.apache.log4j.ConsoleAppender\n"
+            + "log4j.appender.stdout.layout=org.apache.log4j.PatternLayout\n"
+            + "log4j.appender.stdout.layout.ConversionPattern=%5p [%d] ({%t} %F[%M]:%L) - %m%n\n");
     notebookDir = new File(zeppelinHome, "notebook");
     notebookDir.mkdirs();
 

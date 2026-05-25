@@ -31,7 +31,7 @@ except ImportError:
 import mpl_config
 import matplotlib
 from matplotlib._pylab_helpers import Gcf
-from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.backend_bases import ShowBase, FigureManagerBase
 from matplotlib.figure import Figure
 

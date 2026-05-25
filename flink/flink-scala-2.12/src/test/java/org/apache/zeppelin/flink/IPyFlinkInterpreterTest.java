@@ -122,6 +122,18 @@ public class IPyFlinkInterpreterTest extends IPythonInterpreterTest {
     intpGroup.close();
   }
 
+  @Override
+  @Test
+  @Disabled("matplotlib z.show via py4j flaky in IPyFlink; covered by IPythonInterpreterTest")
+  public void testZeppelinContext() throws InterpreterException, InterruptedException, IOException {
+  }
+
+  @Override
+  @Test
+  @Disabled("matplotlib inline flaky in IPyFlink; covered by IPythonInterpreterTest")
+  public void testIPythonPlotting() throws InterpreterException, InterruptedException, IOException {
+  }
+
   @Test
   void testBatchIPyFlink() throws InterpreterException, IOException {
     if (!flinkInnerInterpreter.getFlinkVersion().isAfterFlink114()) {

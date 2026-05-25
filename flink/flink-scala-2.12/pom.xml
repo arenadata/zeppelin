@@ -1269,6 +1269,9 @@
 
     <profile>
       <id>flink-117</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <flink.version>${flink1.17.version}</flink.version>
         <flink.scala.version>2.12.18</flink.scala.version>

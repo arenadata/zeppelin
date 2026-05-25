@@ -101,6 +101,12 @@ class PyFlinkInterpreterTest extends PythonInterpreterTest {
     interpreter = null;
   }
 
+  @Override
+  @Test
+  @Disabled("matplotlib z.show via py4j flaky in PyFlink; covered by PythonInterpreterMatplotlibTest")
+  public void testZeppelinContext() throws InterpreterException, InterruptedException, IOException {
+  }
+
   @Test
   void testBatchPyFlink() throws InterpreterException, IOException {
     if (!flinkInnerInterpreter.getFlinkVersion().isAfterFlink114()){

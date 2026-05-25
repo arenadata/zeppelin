@@ -40,11 +40,11 @@
     <wagon.version>2.7</wagon.version>
 
     <!-- spark versions -->
-    <spark.version>3.5.4.4-4.3.0-0</spark.version>
+    <spark.version>3.5.4.4-4.3.0-1</spark.version>
     <protobuf.version>3.25.9</protobuf.version>
     <py4j.version>0.10.9.7</py4j.version>
-    <spark.scala.version>2.12.18</spark.scala.version>
-    <spark.scala.binary.version>2.12</spark.scala.binary.version>
+    <spark.scala.version>2.13.15</spark.scala.version>
+    <spark.scala.binary.version>2.13</spark.scala.binary.version>
 
     <spark.archive>spark-${spark.version}</spark.archive>
     <spark.bin.archive>${spark.archive}-bin-${hadoop.version}</spark.bin.archive>
@@ -550,6 +550,9 @@
 
     <profile>
       <id>spark-scala-2.13</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <spark.scala.version>2.13.15</spark.scala.version>
         <spark.scala.binary.version>2.13</spark.scala.binary.version>
@@ -558,9 +561,6 @@
 
     <profile>
       <id>spark-scala-2.12</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <properties>
         <spark.scala.version>2.12.18</spark.scala.version>
         <spark.scala.binary.version>2.12</spark.scala.binary.version>
@@ -580,8 +580,11 @@
     <!-- profile spark-x only affect spark version used in test -->
     <profile>
       <id>spark-3.5</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
-        <spark.version>3.5.4.4-4.3.0-0</spark.version>
+        <spark.version>3.5.4.4-4.3.0-1</spark.version>
         <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
       </properties>
@@ -589,9 +592,6 @@
 
     <profile>
       <id>spark-3.4</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <properties>
         <spark.version>3.4.3</spark.version>
         <protobuf.version>3.25.9</protobuf.version>

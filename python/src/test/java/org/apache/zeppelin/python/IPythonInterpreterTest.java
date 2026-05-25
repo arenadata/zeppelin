@@ -207,7 +207,7 @@ public class IPythonInterpreterTest extends BasePythonInterpreterTest {
   }
 
   @Test
-  void testIPythonPlotting() throws InterpreterException, InterruptedException, IOException {
+  public void testIPythonPlotting() throws InterpreterException, InterruptedException, IOException {
     // matplotlib
     InterpreterContext context = getInterpreterContext();
     InterpreterResult result = interpreter.interpret("%matplotlib inline\n" +

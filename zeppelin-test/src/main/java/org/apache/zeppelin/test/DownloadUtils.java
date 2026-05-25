@@ -66,9 +66,9 @@ public class DownloadUtils {
 
   private static String downloadFolder = System.getProperty("user.home") + "/.cache";
   public static final String DEFAULT_SPARK_VERSION =
-      System.getProperty("spark.test.version", "3.5.4.4-4.3.0-0");
+      System.getProperty("spark.test.version", "3.5.4.4-4.3.0-1");
   public static final String DEFAULT_SPARK_HADOOP_VERSION =
-      System.getProperty("spark.test.hadoop.version", "3.4.3.1-4.3.0-0");
+      System.getProperty("spark.test.hadoop.version", "3.4.3.1-4.3.0-1");
 
 
   private DownloadUtils() {
@@ -128,13 +128,14 @@ public class DownloadUtils {
   public static String downloadSpark(String sparkVersion, String hadoopVersion,
       String scalaVersion) {
     File sparkFolder = new File(downloadFolder, "spark");
+    String hadoopPart = isArenadataVersion(sparkVersion) ? hadoopVersion : "hadoop" + hadoopVersion;
     final File targetSparkHomeFolder;
     if (StringUtils.isNotBlank(scalaVersion)) {
       targetSparkHomeFolder = new File(sparkFolder,
-          "spark-" + sparkVersion + "-bin-hadoop" + hadoopVersion + "-scala" + scalaVersion);
+          "spark-" + sparkVersion + "-bin-" + hadoopPart + "-scala" + scalaVersion);
     } else {
       targetSparkHomeFolder = new File(sparkFolder,
-          "spark-" + sparkVersion + "-bin-hadoop" + hadoopVersion);
+          "spark-" + sparkVersion + "-bin-" + hadoopPart);
     }
 
     return downloadSpark(sparkVersion, hadoopVersion, scalaVersion, targetSparkHomeFolder);
@@ -162,12 +163,13 @@ public class DownloadUtils {
       LOGGER.info("Skip to download {} as it is already downloaded.", sparkVersionLog);
       return targetSparkHomeFolder.getAbsolutePath();
     }
+    String hadoopPart = isArenadataVersion(sparkVersion) ? hadoopVersion : "hadoop" + hadoopVersion;
     final File sparkTarGZ;
     if (StringUtils.isBlank(scalaVersion)) {
       sparkTarGZ =
-          new File(sparkFolder, "spark-" + sparkVersion + "-bin-hadoop" + hadoopVersion + ".tgz");
+          new File(sparkFolder, "spark-" + sparkVersion + "-bin-" + hadoopPart + ".tgz");
     } else {
-      sparkTarGZ = new File(sparkFolder, "spark-" + sparkVersion + "-bin-hadoop" + hadoopVersion
+      sparkTarGZ = new File(sparkFolder, "spark-" + sparkVersion + "-bin-" + hadoopPart
           + "-scala" + scalaVersion + ".tgz");
     }
 

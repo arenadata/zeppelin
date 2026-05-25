@@ -27,9 +27,15 @@ import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.CommitBuilder;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.RefUpdate;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.lib.TreeFormatter;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.slf4j.Logger;
@@ -71,7 +77,37 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
       LOGGER.info("Git repo {} does not exist, creating a new one", localRepo.getDirectory());
       localRepo.create();
     }
+    StoredConfig cfg = localRepo.getConfig();
+    if (cfg.getString("user", null, "name") == null) {
+      cfg.setString("user", null, "name", "Zeppelin");
+    }
+    if (cfg.getString("user", null, "email") == null) {
+      cfg.setString("user", null, "email", "zeppelin@apache.org");
+    }
+    cfg.save();
     git = new Git(localRepo);
+  }
+
+  private void ensureInitialCommit() throws IOException {
+    Repository repo = git.getRepository();
+    if (repo.resolve(Constants.HEAD) != null) {
+      return;
+    }
+    try (ObjectInserter inserter = repo.newObjectInserter()) {
+      ObjectId treeId = inserter.insert(new TreeFormatter());
+      CommitBuilder commit = new CommitBuilder();
+      commit.setTreeId(treeId);
+      commit.setMessage("Initial commit");
+      PersonIdent ident = new PersonIdent("Zeppelin", "zeppelin@apache.org");
+      commit.setAuthor(ident);
+      commit.setCommitter(ident);
+      ObjectId commitId = inserter.insert(commit);
+      inserter.flush();
+      RefUpdate refUpdate = repo.updateRef(Constants.HEAD);
+      refUpdate.setNewObjectId(commitId);
+      refUpdate.setRefLogMessage("Initial commit", false);
+      refUpdate.forceUpdate();
+    }
   }
 
   @Override
@@ -82,6 +118,7 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
     super.move(noteId, notePath, newNotePath, subject);
     String noteFileName = buildNoteFileName(noteId, notePath);
     String newNoteFileName = buildNoteFileName(noteId, newNotePath);
+    ensureInitialCommit();
     try {
       git.rm().addFilepattern(noteFileName).call();
       git.add().addFilepattern(newNoteFileName).call();
@@ -96,6 +133,7 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
   public void move(String folderPath, String newFolderPath,
                    AuthenticationInfo subject) throws IOException {
     super.move(folderPath, newFolderPath, subject);
+    ensureInitialCommit();
     try {
       git.rm().addFilepattern(folderPath.substring(1)).call();
       git.add().addFilepattern(newFolderPath.substring(1)).call();
@@ -110,6 +148,7 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
       throws IOException {
     super.remove(noteId, notePath, subject);
     String noteFileName = buildNoteFileName(noteId, notePath);
+    ensureInitialCommit();
     try {
       git.rm().addFilepattern(noteFileName).call();
       git.commit().setMessage("Remove note: " + noteId + ", notePath: " + notePath).call();
@@ -121,6 +160,7 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
   @Override
   public void remove(String folderPath, AuthenticationInfo subject) throws IOException {
     super.remove(folderPath, subject);
+    ensureInitialCommit();
     try {
       git.rm().addFilepattern(folderPath.substring(1)).call();
       git.commit().setMessage("Remove folder: " + folderPath).call();
@@ -143,6 +183,7 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
                              AuthenticationInfo subject) throws IOException {
     String noteFileName = buildNoteFileName(noteId, notePath);
     Revision revision = Revision.EMPTY;
+    ensureInitialCommit();
     try {
       List<DiffEntry> gitDiff = git.diff().call();
       boolean modified = gitDiff.parallelStream().anyMatch(diffEntry -> diffEntry.getNewPath().equals(noteFileName));

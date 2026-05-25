@@ -101,7 +101,7 @@ public class SparkSubmitIntegrationTest {
       InterpreterContext context = new InterpreterContext.Builder().setNoteId("note1").setParagraphId("paragraph_1").build();
       InterpreterResult interpreterResult =
               sparkSubmitInterpreter.interpret("--master local --class org.apache.spark.examples.SparkPi --deploy-mode client " +
-              sparkHome + "/examples/jars/spark-examples_2.12-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
+              sparkHome + "/examples/jars/spark-examples_2.13-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
       assertEquals(InterpreterResult.Code.SUCCESS, interpreterResult.code(), interpreterResult.toString());
 
       // no yarn application launched
@@ -125,7 +125,7 @@ public class SparkSubmitIntegrationTest {
               sparkSubmitInterpreter.interpret("--master yarn --deploy-mode cluster --class org.apache.spark.examples.SparkPi " +
                       "--conf spark.app.name=" + yarnAppName + " --conf spark.driver.memory=512m " +
                       "--conf spark.executor.memory=512m " +
-                      sparkHome + "/examples/jars/spark-examples_2.12-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
+                      sparkHome + "/examples/jars/spark-examples_2.13-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
       assertEquals(InterpreterResult.Code.SUCCESS, interpreterResult.code(), interpreterResult.toString());
 
       GetApplicationsRequest request = GetApplicationsRequest.newInstance(EnumSet.of(YarnApplicationState.FINISHED));
@@ -158,7 +158,7 @@ public class SparkSubmitIntegrationTest {
                     sparkSubmitInterpreter.interpret("--master yarn  --deploy-mode cluster --class org.apache.spark.examples.SparkPi " +
                             "--conf spark.app.name=" + yarnAppName + " --conf spark.driver.memory=512m " +
                             "--conf spark.executor.memory=512m " +
-                            sparkHome + "/examples/jars/spark-examples_2.12-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
+                            sparkHome + "/examples/jars/spark-examples_2.13-" + DownloadUtils.DEFAULT_SPARK_VERSION + ".jar", context);
             assertEquals(InterpreterResult.Code.INCOMPLETE, interpreterResult.code(), interpreterResult.toString());
             assertTrue(interpreterResult.toString().contains("Paragraph received a SIGTERM"), interpreterResult.toString());
           } catch (InterpreterException e) {

@@ -149,6 +149,20 @@
       <artifactId>hadoop-client-minicluster</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- JAXB runtime for Java 11+ (Hadoop YARN MiniCluster JSON serialisation) -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>2.3.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <version>2.3.9</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -165,7 +179,7 @@
           </execution>
         </executions>
         <configuration>
-          <argLine>-Xmx2048m</argLine>
+          <argLine>-Xmx2048m ${extraJavaTestArgs}</argLine>
         </configuration>
       </plugin>
       <plugin>
@@ -174,7 +188,7 @@
         <configuration>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx3072m</argLine>
+          <argLine>-Xmx3072m ${extraJavaTestArgs}</argLine>
           <environmentVariables>
             <ZEPPELIN_HOME>${basedir}/../</ZEPPELIN_HOME>
           </environmentVariables>
