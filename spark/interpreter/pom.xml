@@ -23,7 +23,7 @@
   <parent>
     <artifactId>spark-parent</artifactId>
     <groupId>org.apache.zeppelin</groupId>
-    <version>0.12.0.1-4.3.0-0</version>
+    <version>0.12.0.2-4.4.0-0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -40,14 +40,14 @@
     <wagon.version>2.7</wagon.version>
 
     <!-- spark versions -->
-    <spark.version>3.5.4.4-4.3.0-1</spark.version>
+    <spark.version>3.5.4.5-4.4.0-1</spark.version>
     <protobuf.version>3.25.9</protobuf.version>
     <py4j.version>0.10.9.7</py4j.version>
     <spark.scala.version>2.13.15</spark.scala.version>
     <spark.scala.binary.version>2.13</spark.scala.binary.version>
 
     <spark.archive>spark-${spark.version}</spark.archive>
-    <spark.bin.archive>${spark.archive}-bin-${hadoop.version}</spark.bin.archive>
+    <spark.bin.archive>${spark.archive}-bin-hadoop3</spark.bin.archive>
     <spark.src.download.url>
       https://github.com/arenadata/spark/releases/download/v${spark.version}/${spark.bin.archive}.tgz
     </spark.src.download.url>
@@ -584,7 +584,7 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <spark.version>3.5.4.4-4.3.0-1</spark.version>
+        <spark.version>3.5.4.5-4.4.0-1</spark.version>
         <protobuf.version>3.25.9</protobuf.version>
         <py4j.version>0.10.9.7</py4j.version>
       </properties>

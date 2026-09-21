@@ -96,8 +96,7 @@ class DependencyResolverTest {
     FileNotFoundException exception = assertThrows(FileNotFoundException.class, () -> {
       resolver.load("one.two:1.0", testCopyPath);
     });
-    assertEquals("File system element for parameter 'source' does not exist: 'one.two:1.0'",
-        exception.getMessage());
+    assertEquals("Source 'one.two:1.0' does not exist", exception.getMessage());
   }
 
 }

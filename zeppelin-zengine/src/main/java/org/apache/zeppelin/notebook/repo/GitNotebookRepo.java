@@ -84,6 +84,8 @@ public class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWith
     if (cfg.getString("user", null, "email") == null) {
       cfg.setString("user", null, "email", "zeppelin@apache.org");
     }
+    // no signing key here, and the host git config must not switch it on
+    cfg.setBoolean("commit", null, "gpgsign", false);
     cfg.save();
     git = new Git(localRepo);
   }

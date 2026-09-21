@@ -24,7 +24,7 @@
   <parent>
     <artifactId>zeppelin</artifactId>
     <groupId>org.apache.zeppelin</groupId>
-    <version>0.12.0.1-4.3.0-0</version>
+    <version>0.12.0.2-4.4.0-0</version>
   </parent>
 
   <artifactId>zeppelin-zengine</artifactId>
@@ -38,8 +38,8 @@
     <lucene.version>8.7.0</lucene.version>
     <org.reflections.version>0.9.8</org.reflections.version>
     <xml.apis.version>1.4.01</xml.apis.version>
-    <commons.vfs2.version>2.6.0</commons.vfs2.version>
-    <eclipse.jgit.version>4.5.4.201711221230-r</eclipse.jgit.version>
+    <commons.vfs2.version>2.10.0</commons.vfs2.version>
+    <eclipse.jgit.version>5.13.4.202507202350-r</eclipse.jgit.version>
     <eirslett.version>1.6</eirslett.version>
   </properties>
 

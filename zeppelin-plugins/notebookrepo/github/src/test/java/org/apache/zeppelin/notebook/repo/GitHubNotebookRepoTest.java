@@ -90,7 +90,7 @@ class GitHubNotebookRepoTest {
 
     remoteGit = new Git(remoteRepository);
     remoteGit.add().addFilepattern(".").call();
-    firstCommitRevision = remoteGit.commit().setMessage("First commit from remote repository").call();
+    firstCommitRevision = remoteGit.commit().setSign(false).setMessage("First commit from remote repository").call();
 
     // Set the Git and Git configurations
     zConf.setProperty(ZeppelinConfiguration.ConfVars.ZEPPELIN_HOME.getVarName(),
@@ -139,7 +139,7 @@ class GitHubNotebookRepoTest {
    */
   void pullChangesFromRemoteRepositoryOnCheckpointing() throws GitAPIException, IOException {
     // Create a new commit in the remote repository
-    RevCommit secondCommitRevision = remoteGit.commit().setMessage("Second commit from remote repository").call();
+    RevCommit secondCommitRevision = remoteGit.commit().setSign(false).setMessage("Second commit from remote repository").call();
 
     // Add a new paragraph to the local repository
     addParagraphToNotebook();

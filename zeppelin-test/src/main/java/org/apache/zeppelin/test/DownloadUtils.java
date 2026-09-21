@@ -66,9 +66,10 @@ public class DownloadUtils {
 
   private static String downloadFolder = System.getProperty("user.home") + "/.cache";
   public static final String DEFAULT_SPARK_VERSION =
-      System.getProperty("spark.test.version", "3.5.4.4-4.3.0-1");
+      System.getProperty("spark.test.version", "3.5.4.5-4.4.0-1");
   public static final String DEFAULT_SPARK_HADOOP_VERSION =
-      System.getProperty("spark.test.hadoop.version", "3.4.3.1-4.3.0-1");
+      System.getProperty("spark.test.hadoop.version", "3.4.3.2-4.4.0-1");
+  private static final String ARENADATA_SPARK_HADOOP_PART = "hadoop3";
 
 
   private DownloadUtils() {
@@ -128,7 +129,8 @@ public class DownloadUtils {
   public static String downloadSpark(String sparkVersion, String hadoopVersion,
       String scalaVersion) {
     File sparkFolder = new File(downloadFolder, "spark");
-    String hadoopPart = isArenadataVersion(sparkVersion) ? hadoopVersion : "hadoop" + hadoopVersion;
+    String hadoopPart = isArenadataVersion(sparkVersion)
+        ? ARENADATA_SPARK_HADOOP_PART : "hadoop" + hadoopVersion;
     final File targetSparkHomeFolder;
     if (StringUtils.isNotBlank(scalaVersion)) {
       targetSparkHomeFolder = new File(sparkFolder,
@@ -163,7 +165,8 @@ public class DownloadUtils {
       LOGGER.info("Skip to download {} as it is already downloaded.", sparkVersionLog);
       return targetSparkHomeFolder.getAbsolutePath();
     }
-    String hadoopPart = isArenadataVersion(sparkVersion) ? hadoopVersion : "hadoop" + hadoopVersion;
+    String hadoopPart = isArenadataVersion(sparkVersion)
+        ? ARENADATA_SPARK_HADOOP_PART : "hadoop" + hadoopVersion;
     final File sparkTarGZ;
     if (StringUtils.isBlank(scalaVersion)) {
       sparkTarGZ =
@@ -178,7 +181,7 @@ public class DownloadUtils {
       URL archiveURL;
       if (isArenadataVersion(sparkVersion)) {
         URL adpURL = new URL("https://github.com/arenadata/spark/releases/download/v"
-            + sparkVersion + "/spark-" + sparkVersion + "-bin-" + hadoopVersion + ".tgz");
+            + sparkVersion + "/spark-" + sparkVersion + "-bin-" + hadoopPart + ".tgz");
         mirrorURL = adpURL;
         archiveURL = adpURL;
       } else {

@@ -23,7 +23,7 @@
   <parent>
     <artifactId>zeppelin-interpreter-parent</artifactId>
     <groupId>org.apache.zeppelin</groupId>
-    <version>0.12.0.1-4.3.0-0</version>
+    <version>0.12.0.2-4.4.0-0</version>
     <relativePath>../zeppelin-interpreter-parent/pom.xml</relativePath>
   </parent>
 
@@ -32,7 +32,7 @@
   <name>Zeppelin: Neo4j interpreter</name>
   
   <properties>
-  	<neo4j.driver.version>4.1.1</neo4j.driver.version>
+  	<neo4j.driver.version>4.4.27</neo4j.driver.version>
     <interpreter.name>neo4j</interpreter.name>
   </properties>
 

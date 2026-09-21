@@ -102,6 +102,11 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     try {
       LOGGER.debug("Pulling latest changes from remote stream");
       PullCommand pullCommand = git.pull();
+      // the local repository has no branch tracking configuration
+      pullCommand.setRemote(zConf.getZeppelinNotebookGitRemoteOrigin());
+      pullCommand.setRemoteBranchName(git.getRepository().getBranch());
+      // merge, regardless of pull.rebase in the host git config
+      pullCommand.setRebase(false);
       pullCommand.setCredentialsProvider(
         new UsernamePasswordCredentialsProvider(
           zConf.getZeppelinNotebookGitUsername(),
@@ -111,7 +116,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
       pullCommand.call();
 
-    } catch (GitAPIException e) {
+    } catch (GitAPIException | IOException e) {
       LOGGER.error("Error when pulling latest changes from remote repository", e);
     }
   }
