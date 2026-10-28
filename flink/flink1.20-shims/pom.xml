@@ -26,12 +26,12 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>flink1.16-shims</artifactId>
+    <artifactId>flink1.20-shims</artifactId>
     <packaging>jar</packaging>
-    <name>Zeppelin: Flink1.16 Shims</name>
+    <name>Zeppelin: Flink1.20 Shims</name>
 
     <properties>
-        <flink.version>${flink1.16.version}</flink.version>
+        <flink.version>${flink1.20.version}</flink.version>
         <flink.scala.binary.version>2.12</flink.scala.binary.version>
     </properties>
 
