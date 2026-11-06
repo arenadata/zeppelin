@@ -8,7 +8,7 @@ dependencies:
   - scipy
   - numpy=1.26.4
   - grpcio
-  - protobuf
+  - protobuf<4
   - pandas=1.5
   - pandasql
   - sqlalchemy=1.4.46
@@ -30,5 +30,5 @@ dependencies:
   - intake-xarray
   - jinja2
   - pip:
-      - apache-flink==1.17.1
+      - apache-flink==1.20.4
       - bkzep
