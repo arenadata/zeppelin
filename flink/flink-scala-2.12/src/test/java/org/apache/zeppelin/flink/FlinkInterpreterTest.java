@@ -18,6 +18,7 @@ package org.apache.zeppelin.flink;
 
 
 import net.jodah.concurrentunit.Waiter;
+import org.apache.flink.table.api.Table;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.display.ui.CheckBox;
 import org.apache.zeppelin.display.ui.Select;
@@ -35,12 +36,19 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -407,9 +415,109 @@ class FlinkInterpreterTest {
         resultMessages.get(0).getData(), resultMessages.toString());
   }
 
+  @Test
+  void testCancelStreamSqlKeepsOtherParagraphRunning() throws Exception {
+    String initStreamScalaScript = FlinkStreamSqlInterpreterTest.getInitStreamScript(500);
+    InterpreterResult result = interpreter.interpret(initStreamScalaScript,
+            getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code());
+
+    // Two stream paragraphs share one FlinkZeppelinContext, as %flink.ssql paragraphs
+    // running in parallel do.
+    String sql = "select url, count(1) as pv from log group by url";
+    InterpreterContext contextA = getInterpreterContext("paragraphA");
+    InterpreterContext contextB = getInterpreterContext("paragraphB");
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+    try {
+      Future<Throwable> paragraphA = executor.submit(() -> showStreamTable(contextA, sql));
+      waitForStreamRows(contextA);
+      Future<Throwable> paragraphB = executor.submit(() -> showStreamTable(contextB, sql));
+      waitForStreamRows(contextB);
+
+      interpreter.cancel(getInterpreterContext("paragraphA"));
+
+      Throwable errorB = paragraphB.get(60, TimeUnit.SECONDS);
+      assertNull(errorB, "cancelling paragraph A stopped paragraph B: " + errorB);
+      assertEquals("url\tpv\nhome\t10\nproduct\t30\nsearch\t20\n",
+              contextB.out.toInterpreterResultMessage().get(0).getData());
+      Throwable errorA = paragraphA.get(30, TimeUnit.SECONDS);
+      assertNotNull(errorA, "paragraph A finished as if it was not cancelled");
+      assertEquals("Job was cancelled", errorA.getMessage());
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void testFailedStreamSqlJobReturnsError() throws Exception {
+    // The source fails after the result sink is connected, so the job fails at runtime.
+    InterpreterResult result = interpreter.interpret(
+            "import org.apache.flink.api.common.restartstrategy.RestartStrategies\n" +
+            "import org.apache.flink.streaming.api.functions.source.SourceFunction\n" +
+            "senv.setRestartStrategy(RestartStrategies.noRestart())\n" +
+            "val failingData = senv.addSource(new SourceFunction[String] {\n" +
+            "  override def run(ctx: SourceFunction.SourceContext[String]): Unit = {\n" +
+            "    ctx.collect(\"first\")\n" +
+            "    Thread.sleep(3000)\n" +
+            "    throw new RuntimeException(\"source failed on purpose\")\n" +
+            "  }\n" +
+            "  override def cancel(): Unit = {}\n" +
+            "})\n" +
+            "stenv.registerDataStream(\"failing_log\", failingData, 'word)",
+            getInterpreterContext());
+    assertEquals(InterpreterResult.Code.SUCCESS, result.code(), result.toString());
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      InterpreterContext context = getInterpreterContext();
+      Future<InterpreterResult> paragraph = executor.submit(() -> {
+        InterpreterContext.set(context);
+        return interpreter.interpret(
+                "z.show(stenv.sqlQuery(\"select word, count(1) as cnt from failing_log " +
+                "group by word\"), streamType=\"update\")",
+                context);
+      });
+      InterpreterResult showResult = paragraph.get(60, TimeUnit.SECONDS);
+      String output = context.out.toString();
+      assertEquals(InterpreterResult.Code.ERROR, showResult.code(), output);
+      assertTrue(output.contains("source failed on purpose"), output);
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  private Throwable showStreamTable(InterpreterContext context, String sql) {
+    InterpreterContext.set(context);
+    Thread.currentThread().setContextClassLoader(interpreter.getFlinkScalaShellLoader());
+    try {
+      interpreter.createPlannerAgain();
+      Table table = interpreter.getStreamTableEnvironment().sqlQuery(sql);
+      ((FlinkZeppelinContext) interpreter.getZeppelinContext())
+              .show(table, "update", new HashMap<>());
+      return null;
+    } catch (Exception e) {
+      return e;
+    }
+  }
+
+  private static void waitForStreamRows(InterpreterContext context)
+      throws InterruptedException, TimeoutException {
+    long deadline = System.currentTimeMillis() + 60_000;
+    while (!context.out.toString().contains("home\t")) {
+      if (System.currentTimeMillis() > deadline) {
+        throw new TimeoutException("No rows from paragraph " + context.getParagraphId());
+      }
+      Thread.sleep(200);
+    }
+  }
+
   private InterpreterContext getInterpreterContext() {
+    return getInterpreterContext("paragraphId");
+  }
+
+  private InterpreterContext getInterpreterContext(String paragraphId) {
     InterpreterContext context = InterpreterContext.builder()
-            .setParagraphId("paragraphId")
+            .setParagraphId(paragraphId)
             .setInterpreterOut(new InterpreterOutput())
             .setAngularObjectRegistry(angularObjectRegistry)
             .setIntpEventClient(mock(RemoteInterpreterEventClient.class))

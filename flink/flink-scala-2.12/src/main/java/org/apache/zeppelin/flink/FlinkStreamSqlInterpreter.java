@@ -85,13 +85,14 @@ public class FlinkStreamSqlInterpreter extends FlinkSqlInterpreter {
 
     FlinkZeppelinContext z =
             (FlinkZeppelinContext) flinkInterpreter.getZeppelinContext();
-    z.setCurrentStreamJob(streamJob);
+    String paragraphId = context.getParagraphId();
+    z.setStreamJob(paragraphId, streamJob);
     try {
       streamJob.run(sql);
     } catch (IOException e) {
       throw new RuntimeException("Fail to run " + streamType + " type stream job", e);
     } finally {
-      z.clearCurrentStreamJob();
+      z.clearStreamJob(paragraphId, streamJob);
     }
   }
 

@@ -19,6 +19,7 @@
 package org.apache.zeppelin.flink
 
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.flink.api.scala.DataSet
@@ -113,19 +114,20 @@ class FlinkZeppelinContext(val flinkInterpreter: FlinkScalaInterpreter,
     showTable(columnNames, rows)
   }
 
-  @volatile private var currentStreamJob: AbstractStreamSqlJob = _
+  // Stream jobs of paragraphs running in parallel (%flink.ssql), keyed by paragraph id.
+  private val streamJobs = new ConcurrentHashMap[String, AbstractStreamSqlJob]()
 
-  def cancelCurrentStreamJob(withSavepoint: Boolean): Unit = {
-    val job = currentStreamJob
+  def cancelStreamJob(paragraphId: String, withSavepoint: Boolean): Unit = {
+    val job = streamJobs.get(paragraphId)
     if (job != null) job.cancel(withSavepoint)
   }
 
-  def setCurrentStreamJob(job: AbstractStreamSqlJob): Unit = {
-    currentStreamJob = job
+  def setStreamJob(paragraphId: String, job: AbstractStreamSqlJob): Unit = {
+    streamJobs.put(paragraphId, job)
   }
 
-  def clearCurrentStreamJob(): Unit = {
-    currentStreamJob = null
+  def clearStreamJob(paragraphId: String, job: AbstractStreamSqlJob): Unit = {
+    streamJobs.remove(paragraphId, job)
   }
 
   def show(table: Table, streamType: String, configs: Map[String, String] = Map.empty): Unit = {
@@ -147,11 +149,11 @@ class FlinkZeppelinContext(val flinkInterpreter: FlinkScalaInterpreter,
     } else {
       throw new IOException("Unrecognized stream type: " + streamType)
     }
-    currentStreamJob = streamJob
+    setStreamJob(context.getParagraphId, streamJob)
     try {
       streamJob.run(table, tableName)
     } finally {
-      currentStreamJob = null
+      clearStreamJob(context.getParagraphId, streamJob)
     }
   }
 

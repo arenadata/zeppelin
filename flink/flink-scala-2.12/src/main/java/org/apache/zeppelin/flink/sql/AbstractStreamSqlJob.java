@@ -45,9 +45,11 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -165,11 +167,13 @@ public abstract class AbstractStreamSqlJob {
       }
       // Use a CountDownLatch to wait for job completion while supporting cancellation
       CountDownLatch jobDone = new CountDownLatch(1);
+      AtomicReference<Throwable> jobFailure = new AtomicReference<>();
       Thread jobThread = new Thread(() -> {
         try {
           insertResult.await();
         } catch (Exception e) {
-          LOGGER.debug("Job await interrupted or failed", e);
+          jobFailure.set(e instanceof ExecutionException && e.getCause() != null
+                  ? e.getCause() : e);
         } finally {
           jobDone.countDown();
         }
@@ -189,6 +193,11 @@ public abstract class AbstractStreamSqlJob {
           return buildResult();
         }
         throw new InterruptedException("Job was cancelled");
+      }
+      // Fail before joining the retrieval thread: if the job failed before the sink connected,
+      // the thread never stops waiting for the connection.
+      if (jobFailure.get() != null) {
+        throw new IOException("Fail to run stream sql job", jobFailure.get());
       }
       LOGGER.info("Flink Job is finished, jobName: {}", jobName);
       // wait for retrieve thread consume all data
