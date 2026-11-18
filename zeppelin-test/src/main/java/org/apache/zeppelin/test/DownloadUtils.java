@@ -66,9 +66,9 @@ public class DownloadUtils {
 
   private static String downloadFolder = System.getProperty("user.home") + "/.cache";
   public static final String DEFAULT_SPARK_VERSION =
-      System.getProperty("spark.test.version", "3.5.4.5-4.4.0-1");
+      System.getProperty("spark.test.version", "3.5.4.6-4.5.0-1");
   public static final String DEFAULT_SPARK_HADOOP_VERSION =
-      System.getProperty("spark.test.hadoop.version", "3.4.3.2-4.4.0-1");
+      System.getProperty("spark.test.hadoop.version", "3.4.3.3-4.5.0-1");
   private static final String ARENADATA_SPARK_HADOOP_PART = "hadoop3";
 
 
