@@ -1050,7 +1050,8 @@ public class InterpreterSetting {
           InterpreterProperty newProperty = new InterpreterProperty(
               key,
               stringMap.get("value"),
-              stringMap.containsKey("type") ? stringMap.get("type").toString() : "string");
+              stringMap.containsKey("type") ? stringMap.get("type").toString() : "string",
+              stringMap.get("description") != null ? stringMap.get("description").toString() : null);
 
           newProperties.put(newProperty.getName(), newProperty);
         } else if (value instanceof DefaultInterpreterProperty){

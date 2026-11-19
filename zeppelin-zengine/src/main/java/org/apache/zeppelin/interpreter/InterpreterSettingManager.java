@@ -271,12 +271,8 @@ public class InterpreterSettingManager implements NoteEventListener {
       // the user saved interpreter setting
       if (interpreterSettingTemplate != null) {
         savedInterpreterSetting.sortPropertiesByTemplate(interpreterSettingTemplate.getProperties());
-        savedInterpreterSetting.fillPropertyDescription(interpreterSettingTemplate.getProperties());
-        // merge InterpreterDir, InterpreterInfo & InterpreterRunner
         savedInterpreterSetting.setInterpreterDir(
             interpreterSettingTemplate.getInterpreterDir());
-        savedInterpreterSetting.setInterpreterInfos(
-            interpreterSettingTemplate.getInterpreterInfos());
         savedInterpreterSetting.setInterpreterRunner(
             interpreterSettingTemplate.getInterpreterRunner());
       } else {
@@ -298,22 +294,9 @@ public class InterpreterSettingManager implements NoteEventListener {
       addInterpreterSetting(savedInterpreterSetting);
     }
 
-    for (InterpreterSetting interpreterSettingTemplate : interpreterSettingTemplates.values()) {
-      InterpreterSetting interpreterSetting = new InterpreterSetting(interpreterSettingTemplate);
-      initInterpreterSetting(interpreterSetting);
-      // add newly detected interpreter if it doesn't exist in interpreter.json
-      if (!interpreterSettings.containsKey(interpreterSetting.getId())) {
-        LOGGER.info("Create interpreter setting: {} from interpreter setting template", interpreterSetting.getId());
-        addInterpreterSetting(interpreterSetting);
-      }
-    }
-
     if (infoSaving.interpreterRepositories != null) {
-      for (RemoteRepository repo : infoSaving.interpreterRepositories) {
-        if (!dependencyResolver.getRepos().contains(repo)) {
-          this.interpreterRepositories.add(repo);
-        }
-      }
+      this.interpreterRepositories.clear();
+      this.interpreterRepositories.addAll(infoSaving.interpreterRepositories);
 
       // force interpreter dependencies loading once the
       // repositories have been loaded.
