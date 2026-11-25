@@ -23,7 +23,7 @@
   <parent>
     <artifactId>flink-parent</artifactId>
     <groupId>org.apache.zeppelin</groupId>
-    <version>0.12.0.3-4.5.0-0</version>
+    <version>0.12.0.3-4.5.0-1</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -37,12 +37,13 @@
     <flink.scala.version>2.12.18</flink.scala.version>
     <flink.scala.binary.version>2.12</flink.scala.binary.version>
     <flink.scala.compile.version>${flink.scala.version}</flink.scala.compile.version>
-    <hive.version>2.3.7</hive.version>
+    <hive.version>2.3.10.4-4.5.0-0</hive.version>
     <hive.guava.version>33.5.0-jre</hive.guava.version>
     <derby.version>10.14.2.0</derby.version>
     <hiverunner.version>5.3.0</hiverunner.version>
 
-    <flink.bin.download.url>https://www.apache.org/dyn/closer.lua/flink/flink-${flink.version}/flink-${flink.version}-bin-scala_${flink.scala.binary.version}.tgz?action=download</flink.bin.download.url>
+    <flink.bin.download.name>flink-${flink.version}-bin-scala_${flink.scala.binary.version}.tgz</flink.bin.download.name>
+    <flink.bin.download.url>https://www.apache.org/dyn/closer.lua/flink/flink-${flink.version}/${flink.bin.download.name}?action=download</flink.bin.download.url>
   </properties>
   
   <dependencies>
@@ -419,8 +420,19 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-exec</artifactId>
       <version>${hive.version}</version>
+      <!-- Use Hive classes without the bundled Calcite that conflicts with Flink's planner. -->
+      <classifier>core</classifier>
       <scope>provided</scope>
       <exclusions>
+        <!-- Use the Janino pair from Flink's planner. -->
+        <exclusion>
+          <groupId>org.codehaus.janino</groupId>
+          <artifactId>commons-compiler</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.janino</groupId>
+          <artifactId>janino</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>org.apache.hive</groupId>
           <artifactId>hive-vector-code-gen</artifactId>
@@ -836,6 +848,11 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
+          <!-- Keep the hive-exec core classifier selected above. -->
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-exec</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-common</artifactId>
         </exclusion>
@@ -1044,7 +1061,7 @@
               <url>${flink.bin.download.url}</url>
               <unpack>true</unpack>
               <outputDirectory>${project.build.directory}</outputDirectory>
-              <outputFileName>flink-${flink.version}-bin-scala_${flink.scala.binary.version}.tgz</outputFileName>
+              <outputFileName>${flink.bin.download.name}</outputFileName>
             </configuration>
           </execution>
         </executions>
@@ -1232,9 +1249,18 @@
       </activation>
       <properties>
         <flink.version>${flink1.20.version}</flink.version>
+        <flink.bin.download.name>flink-${flink.version}-bin.tgz</flink.bin.download.name>
+        <flink.bin.download.url>https://github.com/arenadata/flink/releases/download/v${flink.version}/${flink.bin.download.name}</flink.bin.download.url>
         <flink.scala.binary.version>2.12</flink.scala.binary.version>
       </properties>
       <dependencies>
+        <!-- The streaming SQL tests write Parquet input files. -->
+        <dependency>
+          <groupId>org.apache.parquet</groupId>
+          <artifactId>parquet-hadoop</artifactId>
+          <version>1.17.1</version>
+          <scope>test</scope>
+        </dependency>
         <dependency>
           <groupId>org.apache.flink</groupId>
           <artifactId>flink-runtime</artifactId>
