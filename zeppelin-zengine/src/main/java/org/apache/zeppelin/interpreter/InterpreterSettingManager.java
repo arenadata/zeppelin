@@ -145,6 +145,7 @@ public class InterpreterSettingManager implements NoteEventListener {
   private Map<String, String> jupyterKernelLanguageMap = new HashMap<>();
   private List<String> includesInterpreters;
   private List<String> excludesInterpreters;
+  private boolean preserveInterpreterJson;
 
   @Inject
   public InterpreterSettingManager(ZeppelinConfiguration zConf,
@@ -237,8 +238,11 @@ public class InterpreterSettingManager implements NoteEventListener {
 
   /**
    * Load interpreter setting from interpreter.json
+   *
+   * @return true if interpreter.json did not exist and the settings were created
+   *         from the interpreter setting templates
    */
-  private void loadFromFile() throws IOException {
+  private boolean loadFromFile() throws IOException {
     InterpreterInfoSaving infoSaving =
         configStorage.loadInterpreterSettings();
     if (infoSaving == null) {
@@ -251,7 +255,7 @@ public class InterpreterSettingManager implements NoteEventListener {
           addInterpreterSetting(interpreterSetting);
         }
       }
-      return;
+      return true;
     }
 
     //TODO(zjffdu) still ugly (should move all to InterpreterInfoSaving)
@@ -271,12 +275,20 @@ public class InterpreterSettingManager implements NoteEventListener {
       // the user saved interpreter setting
       if (interpreterSettingTemplate != null) {
         savedInterpreterSetting.sortPropertiesByTemplate(interpreterSettingTemplate.getProperties());
-        savedInterpreterSetting.fillPropertyDescription(interpreterSettingTemplate.getProperties());
+        if (!preserveInterpreterJson) {
+          savedInterpreterSetting.fillPropertyDescription(interpreterSettingTemplate.getProperties());
+        }
         // merge InterpreterDir, InterpreterInfo & InterpreterRunner
         savedInterpreterSetting.setInterpreterDir(
             interpreterSettingTemplate.getInterpreterDir());
-        savedInterpreterSetting.setInterpreterInfos(
-            interpreterSettingTemplate.getInterpreterInfos());
+        List<InterpreterInfo> savedInterpreterInfos = savedInterpreterSetting.getInterpreterInfos();
+        if (!preserveInterpreterJson
+            || savedInterpreterInfos == null || savedInterpreterInfos.isEmpty()) {
+          // In preserve mode keep the saved interpreterGroup, unless it is missing:
+          // a setting without interpreters can not run anything.
+          savedInterpreterSetting.setInterpreterInfos(
+              interpreterSettingTemplate.getInterpreterInfos());
+        }
         savedInterpreterSetting.setInterpreterRunner(
             interpreterSettingTemplate.getInterpreterRunner());
       } else {
@@ -298,20 +310,28 @@ public class InterpreterSettingManager implements NoteEventListener {
       addInterpreterSetting(savedInterpreterSetting);
     }
 
-    for (InterpreterSetting interpreterSettingTemplate : interpreterSettingTemplates.values()) {
-      InterpreterSetting interpreterSetting = new InterpreterSetting(interpreterSettingTemplate);
-      initInterpreterSetting(interpreterSetting);
-      // add newly detected interpreter if it doesn't exist in interpreter.json
-      if (!interpreterSettings.containsKey(interpreterSetting.getId())) {
-        LOGGER.info("Create interpreter setting: {} from interpreter setting template", interpreterSetting.getId());
-        addInterpreterSetting(interpreterSetting);
+    if (!preserveInterpreterJson) {
+      for (InterpreterSetting interpreterSettingTemplate : interpreterSettingTemplates.values()) {
+        InterpreterSetting interpreterSetting = new InterpreterSetting(interpreterSettingTemplate);
+        initInterpreterSetting(interpreterSetting);
+        // add newly detected interpreter if it doesn't exist in interpreter.json
+        if (!interpreterSettings.containsKey(interpreterSetting.getId())) {
+          LOGGER.info("Create interpreter setting: {} from interpreter setting template", interpreterSetting.getId());
+          addInterpreterSetting(interpreterSetting);
+        }
       }
     }
 
     if (infoSaving.interpreterRepositories != null) {
-      for (RemoteRepository repo : infoSaving.interpreterRepositories) {
-        if (!dependencyResolver.getRepos().contains(repo)) {
-          this.interpreterRepositories.add(repo);
+      if (preserveInterpreterJson) {
+        // use the saved list as is, including an explicitly empty one
+        this.interpreterRepositories.clear();
+        this.interpreterRepositories.addAll(infoSaving.interpreterRepositories);
+      } else {
+        for (RemoteRepository repo : infoSaving.interpreterRepositories) {
+          if (!dependencyResolver.getRepos().contains(repo)) {
+            this.interpreterRepositories.add(repo);
+          }
         }
       }
 
@@ -321,6 +341,7 @@ public class InterpreterSettingManager implements NoteEventListener {
         setting.setDependencies(setting.getDependencies());
       }
     }
+    return false;
   }
 
   private void addInterpreterSetting(InterpreterSetting interpreterSetting) {
@@ -376,10 +397,16 @@ public class InterpreterSettingManager implements NoteEventListener {
               ConfVars.ZEPPELIN_INTERPRETER_INCLUDES.getVarName(),
               ConfVars.ZEPPELIN_INTERPRETER_EXCLUDES.getVarName()));
     }
+    this.preserveInterpreterJson =
+        zConf.getBoolean(ConfVars.ZEPPELIN_INTERPRETER_JSON_PRESERVE);
     loadJupyterKernelLanguageMap();
     loadInterpreterSettingFromDefaultDir(true);
-    loadFromFile();
-    saveToFile();
+    boolean freshInstall = loadFromFile();
+    // In preserve mode an existing interpreter.json is not rewritten at startup.
+    // It is saved only when the settings are changed (UI, REST API).
+    if (freshInstall || !preserveInterpreterJson) {
+      saveToFile();
+    }
     initMetrics();
 
     // must init Recovery after init of InterpreterSettingManager

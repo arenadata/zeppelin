@@ -977,6 +977,10 @@ public class ZeppelinConfiguration {
     ZEPPELIN_INTERPRETER_OUTPUT_LIMIT("zeppelin.interpreter.output.limit", 1024 * 100),
     ZEPPELIN_INTERPRETER_INCLUDES("zeppelin.interpreter.include", ""),
     ZEPPELIN_INTERPRETER_EXCLUDES("zeppelin.interpreter.exclude", ""),
+    // Keep an existing interpreter.json as provided: do not add settings from templates,
+    // do not replace interpreterGroup, descriptions and repositories, and do not rewrite
+    // the file at startup.
+    ZEPPELIN_INTERPRETER_JSON_PRESERVE("zeppelin.interpreter.json.preserve", false),
 
     ZEPPELIN_ENCODING("zeppelin.encoding", "UTF-8"),
     ZEPPELIN_NOTEBOOK_DIR("zeppelin.notebook.dir", "notebook"),

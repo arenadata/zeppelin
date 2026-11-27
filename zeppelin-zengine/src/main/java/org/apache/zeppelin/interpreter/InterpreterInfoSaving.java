@@ -101,7 +101,17 @@ public class InterpreterInfoSaving implements JsonSerializable {
   }
 
   public static InterpreterInfoSaving fromJson(String json) {
-    return GSON.fromJson(json, InterpreterInfoSaving.class);
+    JsonElement element = JsonParser.parseString(json);
+    InterpreterInfoSaving infoSaving =
+        GSON.fromJson(element, InterpreterInfoSaving.class);
+
+    if (infoSaving != null
+        && element.isJsonObject()
+        && !element.getAsJsonObject().has("interpreterRepositories")) {
+      infoSaving.interpreterRepositories = null;
+    }
+
+    return infoSaving;
   }
 
   static class InterfaceAdapter<T> implements JsonSerializer<T>, JsonDeserializer<T> {
