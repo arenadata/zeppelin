@@ -620,6 +620,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USERNAME: ${{ github.actor }}
         run: ./mvnw clean install -DskipTests -am -pl zeppelin-web -Pweb-classic -Pspark-scala-2.13 -Pspark-3.5 -Pweb-dist ${MAVEN_ARGS}
+      - name: Install Chrome for e2e tests
+        # The e2e tests use Protractor 5. Its webdriver-manager can only download ChromeDriver
+        # up to 114 (see "pree2e" in zeppelin-web/package.json), so Chrome is pinned to the same
+        # version instead of using the Chrome preinstalled on the runner.
+        run: |
+          CHROME_VERSION=114.0.5735.90
+          curl -sSfL -o "$RUNNER_TEMP/chrome.zip" \
+            "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip"
+          unzip -q "$RUNNER_TEMP/chrome.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/chrome-linux64/chrome" --version
+          echo "CHROME_BIN=$RUNNER_TEMP/chrome-linux64/chrome" >> "$GITHUB_ENV"
       - name: Run headless test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
